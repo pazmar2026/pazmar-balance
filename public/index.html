@@ -1,0 +1,3596 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Pazmar Balance</title>
+  <!-- PWA -->
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#00d4ff" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Pazmar" />
+  <link rel="apple-touch-icon" href="/icon-192.png" />
+  <link rel="apple-touch-icon" sizes="152x152" href="/icon-152.png" />
+  <link rel="apple-touch-icon" sizes="192x192" href="/icon-192.png" />
+  <link rel="apple-touch-icon" sizes="512x512" href="/icon-512.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    /* ─── Reset & Base ─────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --primary: #00D4FF;
+      --primary-dim: rgba(0,212,255,0.12);
+      --primary-glow: 0 0 20px rgba(0,212,255,0.35);
+      --accent: #7C3AED;
+      --accent-dim: rgba(124,58,237,0.12);
+      --bg: #080C14;
+      --bg2: #0D1220;
+      --surface: rgba(255,255,255,0.04);
+      --surface2: rgba(255,255,255,0.07);
+      --border: rgba(255,255,255,0.08);
+      --border-bright: rgba(0,212,255,0.28);
+      --text: #EEF2FF;
+      --muted: rgba(238,242,255,0.42);
+      --success: #00E676;
+      --success-dim: rgba(0,230,118,0.12);
+      --warning: #FFB300;
+      --warning-dim: rgba(255,179,0,0.12);
+      --medium: #FF6D00;
+      --medium-dim: rgba(255,109,0,0.12);
+      --danger: #FF1744;
+      --danger-dim: rgba(255,23,68,0.12);
+      --radius: 14px;
+      --shadow: 0 4px 24px rgba(0,0,0,0.45);
+      --shadow-md: 0 8px 32px rgba(0,0,0,0.55);
+    }
+    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+    button { cursor: pointer; border: none; outline: none; font-family: inherit; }
+    input { font-family: inherit; outline: none; }
+    a { text-decoration: none; color: inherit; }
+
+    /* ─── Utilities ────────────────────────────────────────────── */
+    .hidden { display: none !important; }
+    .flex { display: flex; }
+    .flex-col { flex-direction: column; }
+    .items-center { align-items: center; }
+    .justify-center { justify-content: center; }
+    .justify-between { justify-content: space-between; }
+    .gap-2 { gap: 8px; }
+    .gap-3 { gap: 12px; }
+    .gap-4 { gap: 16px; }
+    .w-full { width: 100%; }
+    .text-center { text-align: center; }
+    .text-sm { font-size: 13px; }
+    .text-xs { font-size: 11px; }
+    .font-bold { font-weight: 700; }
+    .font-semibold { font-weight: 600; }
+    .text-muted { color: var(--muted); }
+    .rounded { border-radius: var(--radius); }
+    .p-4 { padding: 16px; }
+    .p-3 { padding: 12px; }
+    .mt-2 { margin-top: 8px; }
+    .mt-3 { margin-top: 12px; }
+    .mt-4 { margin-top: 16px; }
+
+    /* ─── Layout ───────────────────────────────────────────────── */
+    #app { min-height: 100vh; }
+
+    /* ─── Screens ──────────────────────────────────────────────── */
+    .screen { display: none; min-height: 100vh; }
+    .screen.active { display: flex; flex-direction: column; }
+
+    /* ─── Login Screen ─────────────────────────────────────────── */
+    #screen-login {
+      background:
+        radial-gradient(ellipse at 50% -10%, rgba(0,212,255,0.14) 0%, transparent 55%),
+        radial-gradient(ellipse at 100% 110%, rgba(124,58,237,0.1) 0%, transparent 50%),
+        var(--bg);
+      align-items: center;
+      justify-content: flex-start;
+      padding: 24px 16px;
+    }
+    .login-header { text-align: center; padding: 28px 0 20px; }
+    .login-logo { width: 180px; height: auto; display: block; margin: 0 auto 12px; border-radius: 12px; }
+    .login-title { color: var(--text); font-size: 26px; font-weight: 800; }
+    .login-subtitle { color: var(--muted); font-size: 13px; margin-top: 4px; letter-spacing: 0.3px; }
+
+    /* Login grid — Gerência + Agências */
+    .user-grid { display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 420px; margin: 0 auto; }
+
+    /* Card de Gerência (linha única, destaque) */
+    .mgmt-card {
+      background: linear-gradient(135deg, rgba(0,212,255,0.12) 0%, rgba(0,212,255,0.04) 100%);
+      border: 1.5px solid rgba(0,212,255,0.35);
+      border-radius: 16px;
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      cursor: pointer;
+      transition: all 0.18s;
+      color: var(--text);
+    }
+    .mgmt-card:active { transform: scale(0.98); border-color: var(--primary); box-shadow: 0 0 20px rgba(0,212,255,0.25); }
+    .mgmt-card .mgmt-label { font-size: 14px; font-weight: 800; letter-spacing: 0.3px; }
+    .mgmt-card .mgmt-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+    /* Card de Agência (colapsável) */
+    .agency-login-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      transition: all 0.2s;
+    }
+    .agency-login-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .agency-login-header:active { background: rgba(255,255,255,0.04); }
+    .agency-login-badge {
+      width: 40px; height: 40px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 14px; color: white; flex-shrink: 0;
+    }
+    .agency-login-name { font-size: 14px; font-weight: 700; color: var(--text); }
+    .agency-login-sub { font-size: 11px; color: var(--muted); margin-top: 1px; }
+    .agency-login-chevron {
+      margin-left: auto;
+      font-size: 16px;
+      color: var(--muted);
+      transition: transform 0.2s;
+    }
+    .agency-login-card.expanded .agency-login-chevron { transform: rotate(90deg); }
+
+    /* Agentes dentro da agência */
+    .agency-agents {
+      display: none;
+      border-top: 1px solid var(--border);
+      padding: 8px;
+      gap: 8px;
+      flex-direction: column;
+    }
+    .agency-login-card.expanded .agency-agents { display: flex; }
+    .agent-btn {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: all 0.15s;
+      color: var(--text);
+    }
+    .agent-btn:active { background: var(--primary-dim); border-color: var(--primary); transform: scale(0.98); }
+    .agent-btn .agent-avatar {
+      width: 34px; height: 34px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 13px; color: white; flex-shrink: 0;
+    }
+    .agent-btn .agent-name { font-size: 13px; font-weight: 600; }
+    .agent-btn .agent-shift { font-size: 11px; color: var(--muted); margin-top: 1px; }
+    .agent-btn .agent-arrow { margin-left: auto; color: var(--muted); font-size: 16px; }
+
+    /* Manter compatibilidade com user-card para outros usos */
+    .user-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 14px 10px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.18s;
+      color: var(--text);
+      backdrop-filter: blur(10px);
+    }
+    .user-card:active, .user-card.selected {
+      background: var(--primary-dim);
+      border-color: var(--primary);
+      transform: scale(0.97);
+      box-shadow: 0 0 16px rgba(0,212,255,0.18);
+    }
+    .user-card .avatar { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 8px; font-size: 18px; font-weight: 800; color: white; }
+    .user-card .user-name { font-size: 12px; font-weight: 700; line-height: 1.3; color: var(--text); }
+    .user-card .user-sub { font-size: 10px; color: var(--muted); margin-top: 2px; letter-spacing: 0.3px; }
+
+    /* PIN Pad */
+    .pin-container { width: 100%; max-width: 320px; margin: 20px auto 0; }
+    .pin-selected-user {
+      background: var(--surface2);
+      border: 1px solid var(--border-bright);
+      border-radius: 14px;
+      padding: 12px 16px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: var(--text);
+      backdrop-filter: blur(10px);
+    }
+    .pin-dots { display: flex; gap: 14px; justify-content: center; margin-bottom: 24px; }
+    .pin-dot {
+      width: 14px; height: 14px; border-radius: 50%;
+      border: 2px solid rgba(0,212,255,0.35);
+      transition: all 0.15s;
+    }
+    .pin-dot.filled {
+      background: var(--primary);
+      border-color: var(--primary);
+      box-shadow: 0 0 10px rgba(0,212,255,0.55);
+    }
+    .pin-pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .pin-btn {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text);
+      transition: all 0.1s;
+      aspect-ratio: 1;
+      backdrop-filter: blur(10px);
+    }
+    .pin-btn:active {
+      background: var(--primary-dim);
+      border-color: var(--primary);
+      transform: scale(0.93);
+      box-shadow: 0 0 12px rgba(0,212,255,0.28);
+    }
+    .pin-btn.del { font-size: 18px; }
+    .pin-error { color: var(--danger); font-size: 13px; text-align: center; margin-top: 10px; min-height: 20px; }
+
+    /* ─── Top Bar ──────────────────────────────────────────────── */
+    .topbar {
+      background: rgba(8,12,20,0.92);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      color: var(--text);
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .topbar-title { font-size: 16px; font-weight: 800; color: var(--primary); letter-spacing: -0.3px; }
+    .topbar-sub { font-size: 11px; color: var(--muted); }
+    .topbar-btn {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 6px 12px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .topbar-btn:active { background: var(--danger-dim); border-color: var(--danger); color: var(--danger); }
+
+    /* ─── Main Content ─────────────────────────────────────────── */
+    .main-content { flex: 1; padding: 16px; max-width: 600px; margin: 0 auto; width: 100%; }
+
+    /* ─── Zone Header ──────────────────────────────────────────── */
+    .zone-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 8px 4px 10px;
+      margin-top: 4px;
+    }
+    .zone-title {
+      font-size: 11px; font-weight: 800; text-transform: uppercase;
+      letter-spacing: 1.2px; color: var(--primary);
+      display: flex; align-items: center; gap: 6px;
+    }
+    .zone-stats { display: flex; gap: 6px; }
+    .zone-stat { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+    .zone-stat-ok { background: var(--success-dim); color: var(--success); }
+    .zone-stat-alert { background: var(--danger-dim); color: var(--danger); }
+    .zone-stat-pending { background: rgba(255,255,255,0.05); color: var(--muted); }
+
+    /* ─── Cards ────────────────────────────────────────────────── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-bottom: 12px;
+      backdrop-filter: blur(10px);
+    }
+    .card-header { padding: 14px 16px 10px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+    .card-body { padding: 14px 16px; }
+    .card-title { font-size: 15px; font-weight: 700; }
+    .card-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+    /* ─── Agency Card (Management Dashboard) ──────────────────── */
+    .agency-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-bottom: 10px;
+      backdrop-filter: blur(10px);
+      transition: border-color 0.2s;
+    }
+    .agency-card:hover { border-color: rgba(0,212,255,0.18); }
+    .agency-card-header { padding: 12px 16px; display: flex; align-items: center; gap: 10px; }
+    .agency-badge {
+      width: 36px; height: 36px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 12px; color: white; flex-shrink: 0;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+    }
+    .agency-name { font-size: 14px; font-weight: 800; }
+    .agency-date { font-size: 10px; color: var(--muted); }
+
+    /* ─── Shift Row ────────────────────────────────────────────── */
+    .shift-row { padding: 10px 16px; border-top: 1px solid var(--border); }
+    .shift-label {
+      font-size: 10px; font-weight: 800; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 1px;
+      margin-bottom: 8px; display: flex; align-items: center; gap: 6px;
+    }
+    .shift-values { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; margin-bottom: 8px; }
+    .shift-value-item {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 8px 10px;
+    }
+    .shift-value-label { font-size: 9px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+    .shift-value-num { font-size: 13px; font-weight: 800; margin-top: 3px; color: var(--text); }
+    .shift-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+
+    /* ─── Status Badge ─────────────────────────────────────────── */
+    .status-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 20px; font-size: 10px; font-weight: 800; letter-spacing: 0.3px; }
+    .status-ok { background: var(--success-dim); color: var(--success); border: 1px solid rgba(0,230,118,0.22); }
+    .status-warning { background: var(--warning-dim); color: var(--warning); border: 1px solid rgba(255,179,0,0.22); }
+    .status-medium { background: var(--medium-dim); color: var(--medium); border: 1px solid rgba(255,109,0,0.22); }
+    .status-alert { background: var(--danger-dim); color: var(--danger); border: 1px solid rgba(255,23,68,0.22); }
+    .status-pending { background: rgba(255,255,255,0.04); color: var(--muted); border: 1px solid var(--border); }
+
+    /* ─── Diff Result ──────────────────────────────────────────── */
+    .diff-result { border-radius: 10px; padding: 10px 14px; margin-top: 8px; display: flex; align-items: center; justify-content: space-between; border: 1px solid transparent; }
+    .diff-ok { background: var(--success-dim); border-color: rgba(0,230,118,0.18); }
+    .diff-warning { background: var(--warning-dim); border-color: rgba(255,179,0,0.18); }
+    .diff-medium { background: var(--medium-dim); border-color: rgba(255,109,0,0.18); }
+    .diff-alert { background: var(--danger-dim); border-color: rgba(255,23,68,0.18); }
+    .diff-pending { background: rgba(255,255,255,0.03); border-color: var(--border); }
+    .diff-surplus {
+      background: linear-gradient(135deg, rgba(255,215,0,0.12), rgba(255,165,0,0.08));
+      border-color: rgba(255,215,0,0.4);
+      position: relative;
+      overflow: hidden;
+    }
+    .diff-surplus::after {
+      content: '';
+      position: absolute;
+      top: 0; left: -100%; width: 60%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,215,0,0.25), transparent);
+      animation: shimmer-gold 2s infinite;
+    }
+    @keyframes shimmer-gold {
+      0%   { left: -100%; }
+      100% { left: 200%; }
+    }
+    .diff-surplus .diff-value-surplus {
+      font-size: 15px; font-weight: 900;
+      background: linear-gradient(90deg, #FFD700, #FFA500, #FFD700);
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: shimmer-text 2s linear infinite;
+    }
+    @keyframes shimmer-text {
+      0%   { background-position: 0% center; }
+      100% { background-position: 200% center; }
+    }
+    .diff-label { font-size: 11px; font-weight: 700; color: var(--muted); }
+    .diff-value { font-size: 15px; font-weight: 800; }
+
+    /* ─── Action Buttons ───────────────────────────────────────── */
+    .btn { display: inline-flex; align-items: center; gap: 5px; padding: 6px 11px; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer; border: 1px solid transparent; transition: all 0.15s; }
+    .btn:active { transform: scale(0.95); opacity: 0.85; }
+    .btn-primary { background: var(--primary-dim); color: var(--primary); border-color: rgba(0,212,255,0.28); }
+    .btn-primary:active { background: rgba(0,212,255,0.22); }
+    .btn-success { background: var(--success-dim); color: var(--success); border-color: rgba(0,230,118,0.28); }
+    .btn-warning { background: var(--warning-dim); color: var(--warning); border-color: rgba(255,179,0,0.28); }
+    .btn-teal { background: rgba(20,184,166,0.12); color: #2DD4BF; border-color: rgba(45,212,191,0.28); }
+    .btn-purple { background: var(--accent-dim); color: #A78BFA; border-color: rgba(124,58,237,0.28); }
+    .btn-outline { background: transparent; border-color: var(--border); color: var(--muted); }
+    .btn-danger { background: var(--danger-dim); color: var(--danger); border-color: rgba(255,23,68,0.28); }
+    .btn-lg { padding: 13px 20px; font-size: 14px; border-radius: 12px; width: 100%; justify-content: center; font-weight: 700; }
+    .btn-sm { padding: 4px 9px; font-size: 10px; }
+
+    /* ─── Modal ────────────────────────────────────────────────── */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.72); backdrop-filter: blur(4px); z-index: 200; display: flex; align-items: flex-end; justify-content: center; }
+    .modal-overlay.hidden { display: none; }
+    .modal {
+      background: #0D1220;
+      border: 1px solid var(--border);
+      border-top: 1px solid rgba(0,212,255,0.15);
+      border-radius: 20px 20px 0 0;
+      width: 100%; max-width: 480px;
+      padding: 20px 20px 32px;
+      max-height: 90vh; overflow-y: auto;
+    }
+    .modal-handle { width: 40px; height: 4px; background: var(--border); border-radius: 2px; margin: 0 auto 16px; }
+    .modal-title { font-size: 17px; font-weight: 800; margin-bottom: 4px; color: var(--text); }
+    .modal-sub { font-size: 13px; color: var(--muted); margin-bottom: 20px; }
+    .modal-close { position: absolute; top: 16px; right: 16px; background: var(--surface2); border: 1px solid var(--border); border-radius: 50%; width: 32px; height: 32px; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--muted); }
+
+    /* ─── Form ─────────────────────────────────────────────────── */
+    .form-group { margin-bottom: 16px; }
+    .form-label { font-size: 11px; font-weight: 700; color: var(--muted); margin-bottom: 6px; display: block; text-transform: uppercase; letter-spacing: 0.6px; }
+    .form-input {
+      width: 100%; padding: 12px 14px;
+      border: 1px solid var(--border); border-radius: 10px;
+      font-size: 16px; background: var(--bg2); color: var(--text);
+      transition: border-color 0.15s;
+    }
+    .form-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-dim); }
+    .form-select { width: 100%; padding: 12px 14px; border: 1px solid var(--border); border-radius: 10px; font-size: 15px; background: var(--bg2); color: var(--text); }
+    .form-hint { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+    /* ─── Summary Section ──────────────────────────────────────── */
+    .summary-btn {
+      background: linear-gradient(135deg, rgba(0,212,255,0.12) 0%, rgba(124,58,237,0.12) 100%);
+      border: 1px solid var(--border-bright);
+      color: var(--primary);
+      border-radius: 14px;
+      padding: 14px 20px;
+      width: 100%;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 12px;
+      transition: all 0.2s;
+    }
+    .summary-btn:active { opacity: 0.8; transform: scale(0.98); }
+
+    /* ─── Agent Screen ─────────────────────────────────────────── */
+    .agent-shift-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-bottom: 16px;
+      backdrop-filter: blur(10px);
+    }
+    .agent-shift-header { padding: 16px; display: flex; align-items: center; justify-content: space-between; }
+    .agent-shift-title { font-size: 17px; font-weight: 800; }
+    .agent-shift-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .agent-result-box { margin: 0 16px 16px; border-radius: 12px; padding: 14px 16px; border: 1px solid transparent; }
+    .agent-result-label { font-size: 11px; font-weight: 700; opacity: 0.7; text-transform: uppercase; letter-spacing: 0.5px; }
+    .agent-result-value { font-size: 22px; font-weight: 900; margin-top: 4px; }
+    .agent-result-desc { font-size: 12px; opacity: 0.75; margin-top: 4px; }
+    .agent-actions { padding: 0 16px 16px; display: flex; flex-direction: column; gap: 8px; }
+
+    /* ─── Settings ─────────────────────────────────────────────── */
+    .settings-section { margin-bottom: 20px; }
+    .settings-title { font-size: 11px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; padding: 0 4px; }
+    .settings-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 13px 16px;
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 6px;
+      cursor: pointer;
+      transition: all 0.15s;
+      backdrop-filter: blur(10px);
+    }
+    .settings-item:active { background: var(--surface2); border-color: var(--border-bright); }
+    .settings-item-label { font-size: 14px; font-weight: 600; }
+    .settings-item-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .settings-arrow { color: var(--muted); font-size: 16px; }
+
+    /* ─── Tab Bar ──────────────────────────────────────────────── */
+    .tabbar {
+      background: rgba(8,12,20,0.92);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-top: 1px solid var(--border);
+      display: flex;
+      position: sticky;
+      bottom: 0;
+      z-index: 100;
+    }
+    .tab-item { flex: 1; padding: 10px 4px 8px; display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; color: var(--muted); transition: color 0.15s; border: none; background: none; }
+    .tab-item.active { color: var(--primary); }
+    .tab-icon { font-size: 22px; line-height: 1; }
+    .tab-label { font-size: 10px; font-weight: 700; letter-spacing: 0.3px; }
+
+    /* ─── Loading ──────────────────────────────────────────────── */
+    .loading { display: flex; align-items: center; justify-content: center; padding: 40px; color: var(--muted); font-size: 14px; gap: 8px; }
+    .spinner { width: 20px; height: 20px; border: 2px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.7s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ─── Empty State ──────────────────────────────────────────── */
+    .empty { text-align: center; padding: 40px 20px; color: var(--muted); }
+    .empty-icon { font-size: 48px; margin-bottom: 12px; }
+    .empty-text { font-size: 15px; font-weight: 600; }
+    .empty-sub { font-size: 13px; margin-top: 4px; }
+
+    /* ─── Toast ────────────────────────────────────────────────── */
+    #toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: rgba(0,212,255,0.15); border: 1px solid var(--border-bright); color: var(--primary); padding: 10px 20px; border-radius: 20px; font-size: 13px; font-weight: 700; z-index: 999; opacity: 0; transition: opacity 0.3s; pointer-events: none; white-space: nowrap; backdrop-filter: blur(10px); }
+    #toast.show { opacity: 1; }
+
+    /* ─── Ranking ──────────────────────────────────────────────── */
+    .ranking-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-bottom: 12px;
+      backdrop-filter: blur(10px);
+    }
+    .ranking-header {
+      padding: 14px 16px 12px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .ranking-title { font-size: 14px; font-weight: 800; color: var(--text); display: flex; align-items: center; gap: 8px; }
+    .ranking-subtitle { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .ranking-tabs { display: flex; gap: 4px; }
+    .ranking-tab {
+      padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700;
+      cursor: pointer; border: 1px solid var(--border); color: var(--muted);
+      background: transparent; transition: all 0.15s;
+    }
+    .ranking-tab.active { background: var(--primary-dim); border-color: var(--primary); color: var(--primary); }
+    .ranking-row {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+      transition: background 0.15s;
+    }
+    .ranking-row:last-child { border-bottom: none; }
+    .ranking-pos {
+      width: 24px; height: 24px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 800; flex-shrink: 0;
+    }
+    .ranking-pos-1 { background: rgba(255,215,0,0.15); color: #FFD700; border: 1px solid rgba(255,215,0,0.3); }
+    .ranking-pos-2 { background: rgba(192,192,192,0.12); color: #C0C0C0; border: 1px solid rgba(192,192,192,0.25); }
+    .ranking-pos-3 { background: rgba(205,127,50,0.12); color: #CD7F32; border: 1px solid rgba(205,127,50,0.25); }
+    .ranking-pos-n { background: var(--surface2); color: var(--muted); border: 1px solid var(--border); }
+    .ranking-agency { flex: 1; }
+    .ranking-agency-name { font-size: 13px; font-weight: 700; }
+    .ranking-agency-sub { font-size: 10px; color: var(--muted); margin-top: 1px; }
+    .ranking-bar-wrap { width: 80px; }
+    .ranking-bar-bg { height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
+    .ranking-bar-fill { height: 100%; border-radius: 2px; transition: width 0.6s ease; }
+    .ranking-value { font-size: 12px; font-weight: 800; text-align: right; min-width: 70px; }
+    .ranking-value-pos { color: var(--success); }
+    .ranking-value-neg { color: var(--danger); }
+
+    /* ─── Responsive ───────────────────────────────────────────── */
+    @media (min-width: 600px) {
+      .main-content { padding: 24px; }
+      .user-grid { grid-template-columns: repeat(3, 1fr); }
+      .shift-values { grid-template-columns: repeat(4, 1fr); }
+    }
+
+    /* ─── Date Navigator ──────────────────────────────────────────── */
+    .date-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      padding: 10px 14px;
+      margin-bottom: 14px;
+    }
+    .date-nav-btn {
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 8px;
+      color: var(--primary);
+      font-size: 18px;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .date-nav-btn:hover { background: rgba(0,212,255,0.12); }
+    .date-nav-btn:disabled { opacity: 0.3; cursor: default; }
+    .date-nav-center { text-align: center; flex: 1; }
+    .date-nav-label { font-size: 14px; font-weight: 700; color: var(--foreground); }
+    .date-nav-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .date-nav-today-btn {
+      background: rgba(0,212,255,0.12);
+      border: 1px solid rgba(0,212,255,0.3);
+      border-radius: 6px;
+      color: var(--primary);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 8px;
+      cursor: pointer;
+      margin-top: 4px;
+      display: inline-block;
+    }
+    /* ─── Locked Day Banner ────────────────────────────────────────── */
+    .day-locked-banner {
+      background: rgba(239,68,68,0.1);
+      border: 1px solid rgba(239,68,68,0.3);
+      border-radius: 10px;
+      padding: 10px 14px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      color: #FCA5A5;
+    }
+    .day-locked-banner .lock-icon { font-size: 18px; }
+    /* ─── Editable Fields ──────────────────────────────────────────── */
+    .edit-field-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 6px;
+    }
+    .edit-field-label {
+      font-size: 11px;
+      color: var(--muted);
+      min-width: 110px;
+    }
+    .edit-field-input {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 7px;
+      color: var(--foreground);
+      font-size: 13px;
+      font-weight: 600;
+      padding: 5px 9px;
+      width: 130px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .edit-field-input:focus { border-color: var(--primary); }
+    .edit-field-input.saving { opacity: 0.6; }
+    .edit-field-save-btn {
+      background: rgba(0,212,255,0.15);
+      border: 1px solid rgba(0,212,255,0.3);
+      border-radius: 6px;
+      color: var(--primary);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 5px 10px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .edit-field-save-btn:hover { background: rgba(0,212,255,0.25); }
+    .edit-notes-input {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 7px;
+      color: var(--foreground);
+      font-size: 12px;
+      padding: 5px 9px;
+      width: 100%;
+      outline: none;
+      resize: none;
+      transition: border-color 0.15s;
+    }
+    .edit-notes-input:focus { border-color: var(--primary); }
+    .hist-shift-section {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 10px;
+      padding: 12px;
+      margin-top: 10px;
+    }
+    .hist-shift-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--foreground);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+  <!-- ═══════════════════════════════════════════════════════════
+       SCREEN: LOGIN
+  ════════════════════════════════════════════════════════════════ -->
+  <div id="screen-login" class="screen active">
+    <div class="login-header">
+      <img class="login-logo" src="/logo.jpg" alt="Pazmar" />
+      <div class="login-subtitle">Gestão de Saldos das Agências</div>
+    </div>
+
+    <!-- Seleção de utilizador -->
+    <div id="user-select-section" style="width:100%;max-width:420px;margin:0 auto;">
+      <!-- Abas de login -->
+      <div style="display:flex;gap:6px;margin-bottom:12px;background:rgba(255,255,255,0.08);border-radius:12px;padding:4px;">
+        <button id="login-tab-agents" onclick="switchLoginTab('agents')" style="flex:1;padding:8px 4px;border:none;border-radius:8px;background:rgba(255,255,255,0.2);color:white;font-size:12px;font-weight:700;cursor:pointer;">Agências</button>
+        <button id="login-tab-conta" onclick="switchLoginTab('conta')" style="flex:1;padding:8px 4px;border:none;border-radius:8px;background:transparent;color:rgba(255,255,255,0.6);font-size:12px;font-weight:600;cursor:pointer;">Conta</button>
+      </div>
+      <div id="user-grid" class="user-grid"></div>
+      <div id="conta-grid" class="user-grid" style="display:none;"></div>
+    </div>
+
+    <!-- PIN Pad -->
+    <div id="pin-section" class="pin-container hidden">
+      <div class="pin-selected-user" id="pin-user-info">
+        <div id="pin-user-avatar" class="avatar" style="width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;"></div>
+        <div>
+          <div id="pin-user-name" style="font-weight:700;font-size:14px;"></div>
+          <div id="pin-user-sub" style="font-size:11px;color:rgba(255,255,255,0.65);"></div>
+        </div>
+        <button onclick="showUserSelect()" style="margin-left:auto;background:rgba(255,255,255,0.15);border:none;border-radius:8px;padding:5px 10px;color:white;font-size:12px;cursor:pointer;">← Voltar</button>
+      </div>
+      <div class="pin-dots" id="pin-dots">
+        <div class="pin-dot" id="dot-0"></div>
+        <div class="pin-dot" id="dot-1"></div>
+        <div class="pin-dot" id="dot-2"></div>
+        <div class="pin-dot" id="dot-3"></div>
+      </div>
+      <div class="pin-pad">
+        <button class="pin-btn" onclick="pinPress('1')">1</button>
+        <button class="pin-btn" onclick="pinPress('2')">2</button>
+        <button class="pin-btn" onclick="pinPress('3')">3</button>
+        <button class="pin-btn" onclick="pinPress('4')">4</button>
+        <button class="pin-btn" onclick="pinPress('5')">5</button>
+        <button class="pin-btn" onclick="pinPress('6')">6</button>
+        <button class="pin-btn" onclick="pinPress('7')">7</button>
+        <button class="pin-btn" onclick="pinPress('8')">8</button>
+        <button class="pin-btn" onclick="pinPress('9')">9</button>
+        <button class="pin-btn" onclick="pinPress('')" style="opacity:0;pointer-events:none;"></button>
+        <button class="pin-btn" onclick="pinPress('0')">0</button>
+        <button class="pin-btn del" onclick="pinDelete()">⌫</button>
+      </div>
+      <div class="pin-error" id="pin-error"></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SCREEN: MANAGEMENT DASHBOARD
+  ════════════════════════════════════════════════════════════════ -->
+  <div id="screen-management" class="screen">
+    <div class="topbar">
+      <div>
+        <div class="topbar-title" id="mgmt-topbar-title">Pazmar Balance</div>
+        <div class="topbar-sub" id="mgmt-date-label"></div>
+      </div>
+      <button class="topbar-btn" onclick="logout()">Sair</button>
+    </div>
+
+    <!-- Tab content -->
+    <div id="mgmt-tab-dashboard" class="main-content" style="padding-bottom:80px;">
+      <!-- Navegação de data -->
+      <div class="date-nav" id="date-nav-bar">
+        <button class="date-nav-btn" id="date-nav-prev" onclick="navigateDate(-1)" title="Dia anterior">‹</button>
+        <div class="date-nav-center">
+          <div class="date-nav-label" id="date-nav-label">—</div>
+          <div class="date-nav-sub" id="date-nav-sub"></div>
+          <span class="date-nav-today-btn" id="date-nav-today-btn" onclick="goToToday()" style="display:none">↩ Hoje</span>
+        </div>
+        <button class="date-nav-btn" id="date-nav-next" onclick="navigateDate(1)" title="Dia seguinte">›</button>
+      </div>
+      <div id="mgmt-dashboard-content">
+        <div class="loading"><div class="spinner"></div> A carregar...</div>
+      </div>
+      <!-- Barra de validação diária -->
+      <div id="validation-bar" style="margin-bottom:8px;"></div>
+      <button class="summary-btn" onclick="openBulkInitialModal()" style="background:linear-gradient(135deg,rgba(34,197,94,0.15),rgba(16,185,129,0.08));border-color:rgba(34,197,94,0.4);color:#4ADE80;">
+        💰 Saldo Inicial em Massa
+      </button>
+      <button class="summary-btn" onclick="openSummaryModal()">
+        📋 Gerar Resumo do Dia
+      </button>
+    </div>
+
+    <!-- Tab: Gato -->
+    <div id="mgmt-tab-gato" class="main-content hidden" style="padding-bottom:80px;">
+      <div style="padding:16px 16px 8px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+          <div style="font-size:22px;">🐱</div>
+          <div>
+            <div style="font-weight:700;font-size:16px;color:var(--fg);">Registo de Gatos</div>
+            <div style="font-size:12px;color:var(--muted);">Incongruências de saldo detectadas automaticamente</div>
+          </div>
+        </div>
+        <!-- Filtros -->
+        <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+          <button id="gato-filter-today" class="btn btn-primary" style="font-size:12px;padding:6px 12px;" onclick="gatoSetFilter('today')">Hoje</button>
+          <button id="gato-filter-month" class="btn btn-outline" style="font-size:12px;padding:6px 12px;" onclick="gatoSetFilter('month')">Este Mês</button>
+          <input type="month" id="gato-filter-month-input" style="font-size:12px;padding:6px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--fg);" onchange="gatoSetFilter('custom')" />
+        </div>
+      </div>
+      <!-- Resumo de totais -->
+      <div id="gato-summary-cards" style="display:flex;gap:8px;padding:0 16px 12px;overflow-x:auto;"></div>
+      <!-- Lista de gatos -->
+      <div id="gato-list" style="padding:0 16px 16px;">
+        <div class="loading"><div class="spinner"></div> A carregar...</div>
+      </div>
+    </div>
+
+    <div id="mgmt-tab-settings" class="main-content hidden" style="padding-bottom:80px;">
+      <div class="settings-section">
+        <div class="settings-title">Utilizadores</div>
+        <div id="settings-users-list"></div>
+      </div>
+      <div class="settings-section">
+        <div class="settings-title">Agências</div>
+        <div id="settings-agencies-list"></div>
+        <button class="btn btn-outline w-full mt-2" onclick="openAddAgencyModal()">+ Adicionar Agência</button>
+      </div>
+      <div class="settings-section">
+        <div class="settings-title">Conta</div>
+        <div class="settings-item" onclick="openChangePinModal(null)">
+          <div>
+            <div class="settings-item-label">Alterar o meu PIN</div>
+            <div class="settings-item-sub">Alterar o PIN da Gerência</div>
+          </div>
+          <div class="settings-arrow">›</div>
+        </div>
+      </div>
+      <div class="settings-section">
+        <div class="settings-title">Histórico de Validações</div>
+        <div id="settings-validations-list">
+          <div class="loading"><div class="spinner"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab: Contas -->
+    <div id="mgmt-tab-accounts" class="main-content hidden" style="padding-bottom:80px;">
+      <div style="padding:4px 0 12px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
+          <div style="font-size:22px;">📊</div>
+          <div>
+            <div style="font-weight:800;font-size:17px;color:var(--text);">Contas</div>
+            <div id="accounts-zone-label" style="font-size:12px;color:var(--muted);">Validação de valores físicos por contabilista</div>
+          </div>
+        </div>
+        <div class="date-nav" id="accounts-date-nav" style="margin-top:10px;">
+          <button class="date-nav-btn" onclick="accountsNavigateDate(-1)" title="Dia anterior">‹</button>
+          <div class="date-nav-center">
+            <div class="date-nav-label" id="accounts-date-label">—</div>
+            <div class="date-nav-sub" id="accounts-date-sub"></div>
+            <span class="date-nav-today-btn" id="accounts-today-btn" onclick="accountsGoToToday()" style="display:none">↩ Hoje</span>
+          </div>
+          <button class="date-nav-btn" onclick="accountsNavigateDate(1)" title="Dia seguinte">›</button>
+        </div>
+      </div>
+      <div id="accounts-content">
+        <div class="loading"><div class="spinner"></div> A carregar...</div>
+      </div>
+    </div>
+
+    <!-- Tab: Depósitos -->
+    <div id="mgmt-tab-deposits" class="main-content hidden" style="padding-bottom:80px;">
+      <div style="padding:4px 0 12px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
+          <div style="font-size:22px;">🏦</div>
+          <div>
+            <div style="font-weight:800;font-size:17px;color:var(--text);">Contabilidade dos Depósitos</div>
+            <div style="font-size:12px;color:var(--muted);">Valores físicos a depositar no dia seguinte</div>
+          </div>
+        </div>
+        <!-- Navegação de data (partilhada com o dashboard) -->
+        <div class="date-nav" id="deposits-date-nav" style="margin-top:10px;">
+          <button class="date-nav-btn" onclick="depositsNavigateDate(-1)" title="Dia anterior">‹</button>
+          <div class="date-nav-center">
+            <div class="date-nav-label" id="deposits-date-label">—</div>
+            <div class="date-nav-sub" id="deposits-date-sub"></div>
+            <span class="date-nav-today-btn" id="deposits-today-btn" onclick="depositsGoToToday()" style="display:none">↩ Hoje</span>
+          </div>
+          <button class="date-nav-btn" onclick="depositsNavigateDate(1)" title="Dia seguinte">›</button>
+        </div>
+      </div>
+      <div id="deposits-content">
+        <div class="loading"><div class="spinner"></div> A carregar...</div>
+      </div>
+    </div>
+
+    <div class="tabbar">
+      <button class="tab-item active" id="tab-mgmt-dashboard" onclick="switchMgmtTab('dashboard')">
+        <span class="tab-icon">👤</span>
+        <span class="tab-label">Agente Diário</span>
+      </button>
+      <button class="tab-item" id="tab-mgmt-deposits" onclick="switchMgmtTab('deposits')">
+        <span class="tab-icon">🏦</span>
+        <span class="tab-label">Depósitos</span>
+      </button>
+      <button class="tab-item" id="tab-mgmt-gato" onclick="switchMgmtTab('gato')">
+        <span class="tab-icon">🐱</span>
+        <span class="tab-label">Gato</span>
+      </button>
+      <button class="tab-item" id="tab-mgmt-accounts" onclick="switchMgmtTab('accounts')">
+        <span class="tab-icon">📊</span>
+        <span class="tab-label">Contas</span>
+      </button>
+      <button class="tab-item" id="tab-mgmt-settings" onclick="switchMgmtTab('settings')">
+        <span class="tab-icon">⚙️</span>
+        <span class="tab-label">Definições</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SCREEN: AGENT
+  ════════════════════════════════════════════════════════════════ -->
+  <div id="screen-agent" class="screen">
+    <div class="topbar">
+      <div>
+        <div class="topbar-title" id="agent-topbar-title">Agente</div>
+        <div class="topbar-sub" id="agent-topbar-sub"></div>
+      </div>
+      <button class="topbar-btn" onclick="logout()">Sair</button>
+    </div>
+    <div class="main-content" style="padding-bottom:20px;">
+      <div id="agent-content">
+        <div class="loading"><div class="spinner"></div> A carregar...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       MODALS
+  ════════════════════════════════════════════════════════════════ -->
+
+  <!-- Modal: Inserir Valor -->
+  <div id="modal-value" class="modal-overlay hidden">
+    <div class="modal" style="position:relative;">
+      <div class="modal-handle"></div>
+      <div class="modal-title" id="modal-value-title">Inserir Valor</div>
+      <div class="modal-sub" id="modal-value-sub"></div>
+      <div class="form-group">
+        <label class="form-label">Valor (Kz)</label>
+        <input type="number" id="modal-value-input" class="form-input" placeholder="0.00" inputmode="decimal" min="0" step="0.01" />
+        <div class="form-hint" id="modal-value-hint"></div>
+      </div>
+      <div class="form-group" id="modal-left-group" style="display:none;">
+        <label class="form-label">🏦 Valor Deixado na Agência (Kz)</label>
+        <input type="number" id="modal-left-input" class="form-input" placeholder="0.00 (opcional)" inputmode="decimal" min="0" step="0.01" />
+        <div class="form-hint">Valor que fica fisicamente na agência. O restante será depositado.</div>
+      </div>
+      <div class="form-group" id="modal-notes-group">
+        <label class="form-label">Notas (opcional)</label>
+        <input type="text" id="modal-notes-input" class="form-input" placeholder="Observações..." />
+      </div>
+      <button class="btn btn-primary btn-lg" onclick="submitValueModal()">Confirmar</button>
+      <button class="btn btn-outline btn-lg mt-2" onclick="closeValueModal()">Cancelar</button>
+    </div>
+  </div>
+
+  <!-- Modal: Movimento -->
+  <div id="modal-movement" class="modal-overlay hidden">
+    <div class="modal" style="position:relative;">
+      <div class="modal-handle"></div>
+      <div class="modal-title" id="modal-movement-title">Registar Movimento</div>
+      <div class="modal-sub">Apenas informativo — não entra na fórmula de verificação</div>
+      <div class="form-group">
+        <label class="form-label">Tipo de Movimento</label>
+        <select id="modal-movement-type" class="form-select">
+          <option value="deposit">Depósito</option>
+          <option value="withdrawal">Levantamento</option>
+          <option value="transfer">Transferência</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Valor (Kz) — opcional</label>
+        <input type="number" id="modal-movement-amount" class="form-input" placeholder="0.00" inputmode="decimal" min="0" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Notas (opcional)</label>
+        <input type="text" id="modal-movement-notes" class="form-input" placeholder="Descrição do movimento..." />
+      </div>
+      <button class="btn btn-warning btn-lg" onclick="submitMovementModal()">Guardar Movimento</button>
+      <button class="btn btn-outline btn-lg mt-2" onclick="closeMovementModal()">Cancelar</button>
+    </div>
+  </div>
+
+  <!-- Modal: Validar Dia -->
+  <div id="modal-validate-day" class="modal-overlay hidden">
+    <div class="modal" style="position:relative;">
+      <div class="modal-handle"></div>
+      <div class="modal-title">✅ Validar Dia de Trabalho</div>
+      <div class="modal-sub">Confirmar que todos os registos do dia estão correctos</div>
+      <div id="validate-day-stats"></div>
+      <div class="form-group">
+        <label class="form-label">Notas (opcional)</label>
+        <input type="text" id="validate-notes" class="form-input" placeholder="Observações sobre o dia..." />
+      </div>
+      <button class="btn btn-success btn-lg" onclick="submitValidateDay()">✅ Confirmar Validação</button>
+      <button class="btn btn-outline btn-lg mt-2" onclick="closeValidateDayModal()">Cancelar</button>
+    </div>
+  </div>
+
+  <!-- Modal: Confirmar Depósito -->
+  <div id="modal-deposit-confirm" class="modal-overlay hidden">
+    <div class="modal" style="position:relative;">
+      <div class="modal-handle"></div>
+      <div class="modal-title" id="dep-confirm-title">🏦 Confirmar Depósito</div>
+      <div class="modal-sub">Insira o valor efectivamente depositado no banco</div>
+
+      <!-- Valor esperado (declarado pelo agente) -->
+      <div style="background:var(--surface2);border-radius:12px;padding:14px;margin-bottom:12px;">
+        <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">Valor Físico Declarado pelo Agente</div>
+        <div style="font-size:24px;font-weight:800;color:var(--text);" id="dep-confirm-expected">—</div>
+      </div>
+
+      <!-- Campo de valor depositado -->
+      <div class="form-group">
+        <label class="form-label">🏦 Valor Depositado no Banco (Kz)</label>
+        <input type="number" id="dep-confirm-amount-input" class="form-input" placeholder="Insira o valor depositado..." inputmode="decimal" min="0" step="0.01" oninput="updateDepositDiffPreview()" />
+      </div>
+
+      <!-- Preview da diferença em tempo real -->
+      <div id="dep-confirm-diff-box" style="display:none;border-radius:12px;padding:14px;margin-bottom:12px;">
+        <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;" id="dep-confirm-diff-label">Diferença</div>
+        <div style="font-size:22px;font-weight:800;" id="dep-confirm-diff-value">—</div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Notas (opcional)</label>
+        <input type="text" id="dep-confirm-notes-input" class="form-input" placeholder="Observações sobre o depósito..." />
+      </div>
+      <button class="btn btn-success btn-lg" onclick="submitDepositConfirm()">✅ Confirmar Depósito</button>
+      <button class="btn btn-outline btn-lg mt-2" onclick="closeDepositConfirmModal()">Cancelar</button>
+    </div>
+  </div>
+
+  <!-- Modal: Validar Contagem (Contabilista) -->
+  <div id="modal-validate" class="modal-overlay hidden">
+    <div class="modal" style="position:relative;">
+      <div class="modal-handle"></div>
+      <div class="modal-title" id="validate-modal-title">📊 Validar Contagem</div>
+      <div class="modal-sub" id="validate-modal-agency-label"></div>
+
+      <!-- Valor declarado pelo agente -->
+      <div style="background:var(--surface2);border-radius:12px;padding:14px;margin-bottom:12px;">
+        <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">Valor Declarado pelo Agente</div>
+        <div style="font-size:24px;font-weight:800;color:var(--text);" id="validate-declared">—</div>
+      </div>
+
+      <!-- Campo de valor contado -->
+      <div class="form-group">
+        <label class="form-label">🧲 Valor Contado pelo Contabilista (Kz)</label>
+        <input type="number" id="validate-counted-input" class="form-input" placeholder="Insira o valor contado..." inputmode="decimal" min="0" step="0.01" oninput="updateGatoPreview()" />
+      </div>
+
+      <!-- Preview da diferença em tempo real -->
+      <div id="validate-diff-box" style="display:none;border-radius:12px;padding:14px;margin-bottom:12px;">
+        <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;" id="validate-diff-label">Diferença</div>
+        <div style="font-size:22px;font-weight:800;" id="validate-diff-value">—</div>
+        <div style="font-size:12px;margin-top:4px;" id="validate-gato-preview"></div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Notas (opcional)</label>
+        <input type="text" id="validate-notes-input" class="form-input" placeholder="Observações sobre a contagem..." />
+      </div>
+      <button class="btn btn-success btn-lg" onclick="submitValidateModal()">✅ Confirmar Validação</button>
+      <button class="btn btn-outline btn-lg mt-2" onclick="closeValidateModal()">Cancelar</button>
+    </div>
+  </div>
+
+  <!-- Modal: Resumo do Dia -->
+  <div id="modal-summary" class="modal-overlay hidden">
+    <div class="modal">
+      <div class="modal-handle"></div>
+      <div class="modal-title">Resumo do Dia</div>
+      <div class="modal-sub" id="summary-date-label"></div>
+      <div id="summary-content"></div>
+      <button class="btn btn-primary btn-lg mt-3" onclick="shareSummary()">📤 Partilhar via WhatsApp</button>
+      <button class="btn btn-outline btn-lg mt-2" onclick="closeSummaryModal()">Fechar</button>
+    </div>
+  </div>
+
+  <!-- Modal: Alterar PIN -->
+  <div id="modal-pin" class="modal-overlay hidden">
+    <div class="modal">
+      <div class="modal-handle"></div>
+      <div class="modal-title">Alterar PIN</div>
+      <div class="modal-sub" id="modal-pin-sub">Insira o novo PIN de 4 dígitos</div>
+      <div class="form-group">
+        <label class="form-label">Novo PIN (4 dígitos)</label>
+        <input type="password" id="modal-pin-input" class="form-input" placeholder="••••" maxlength="4" inputmode="numeric" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Confirmar PIN</label>
+        <input type="password" id="modal-pin-confirm" class="form-input" placeholder="••••" maxlength="4" inputmode="numeric" />
+      </div>
+      <button class="btn btn-primary btn-lg" onclick="submitPinChange()">Guardar PIN</button>
+      <button class="btn btn-outline btn-lg mt-2" onclick="closePinModal()">Cancelar</button>
+    </div>
+  </div>
+
+  <!-- Modal: Adicionar Agência -->
+  <div id="modal-agency" class="modal-overlay hidden">
+    <div class="modal">
+      <div class="modal-handle"></div>
+      <div class="modal-title">Nova Agência</div>
+      <div class="modal-sub">Adicionar uma nova agência Pazmar</div>
+      <div class="form-group">
+        <label class="form-label">Nome da Agência</label>
+        <input type="text" id="modal-agency-name" class="form-input" placeholder="Ex: Pazmar 7" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Código</label>
+        <input type="text" id="modal-agency-code" class="form-input" placeholder="Ex: P7" maxlength="4" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Localização</label>
+        <select id="modal-agency-location" class="form-input" style="appearance:auto;">
+          <option value="Lobito">🏙️ Lobito</option>
+          <option value="Benguela">🌊 Benguela</option>
+          <option value="Outra">📍 Outra</option>
+        </select>
+      </div>
+      <button class="btn btn-primary btn-lg" onclick="submitAddAgency()">Adicionar Agência</button>
+      <button class="btn btn-outline btn-lg mt-2" onclick="closeAgencyModal()">Cancelar</button>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast"></div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════════
+const API = '';  // same origin
+let state = {
+  token: localStorage.getItem('pazmar_token'),
+  user: JSON.parse(localStorage.getItem('pazmar_user') || 'null'),
+  agency: JSON.parse(localStorage.getItem('pazmar_agency') || 'null'),
+  users: [],
+  agencies: [],
+  todayRecords: [],
+  currentMgmtTab: 'dashboard',
+};
+
+// Modal context
+let modalCtx = {};
+
+// ═══════════════════════════════════════════════════════════════
+// API HELPERS
+// ═══════════════════════════════════════════════════════════════
+async function api(method, path, body) {
+  const opts = {
+    method,
+    headers: { 'Content-Type': 'application/json' },
+  };
+  if (state.token) opts.headers['Authorization'] = 'Bearer ' + state.token;
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(API + path, opts);
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Erro desconhecido');
+  return data;
+}
+
+function getTodayDate() {
+  return new Date().toISOString().split('T')[0];
+}
+
+function formatDate(d) {
+  return new Date(d + 'T12:00:00').toLocaleDateString('pt-AO', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+}
+
+function fmtCurrency(v) {
+  if (v === null || v === undefined) return '—';
+  return new Intl.NumberFormat('pt-AO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(v) + ' Kz';
+}
+
+function showToast(msg, duration = 2500) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), duration);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SCREENS
+// ═══════════════════════════════════════════════════════════════
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + id).classList.add('active');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// LOGIN
+// ═══════════════════════════════════════════════════════════════
+let selectedUserId = null;
+let pinValue = '';
+
+async function initLogin() {
+  showScreen('login');
+  try {
+    const [users, agencies] = await Promise.all([
+      api('GET', '/api/users'),
+      fetch('/api/agencies-public').then(r => r.json()).catch(() => []),
+    ]);
+    state.users = users;
+    state.loginAgencies = agencies;
+    renderUserGrid();
+  } catch(e) {
+    document.getElementById('user-grid').innerHTML = '<p style="color:rgba(255,255,255,0.7);text-align:center;padding:20px;">Erro ao carregar utilizadores</p>';
+  }
+}
+
+function renderUserGrid() {
+  const agencyColors = ['#1A56DB','#7C3AED','#0F766E','#D97706','#DC2626','#16A34A','#0891B2','#9333EA'];
+  const grid = document.getElementById('user-grid');
+
+  // Separar gerência de agentes
+  const mgmtUser = state.users.find(u => u.role === 'management');
+  const agents = state.users.filter(u => u.role === 'agent');
+
+  // Agrupar agentes por agência (usando agency_id)
+  const byAgency = {};
+  for (const u of agents) {
+    const aid = u.agency_id || 'unknown';
+    if (!byAgency[aid]) byAgency[aid] = [];
+    byAgency[aid].push(u);
+  }
+
+  // Obter agências do state (carregadas no initLogin)
+  const agencies = state.loginAgencies || [];
+
+  let html = '';
+
+  // Card da Gerência
+  if (mgmtUser) {
+    const initial = mgmtUser.name.charAt(0).toUpperCase();
+    html += `<div class="mgmt-card" onclick="selectUser('${mgmtUser.id}', '${mgmtUser.name}', 'management', 'Acesso Total', '#1A56DB', '${initial}')">
+      <div class="avatar" style="background:#1A56DB;width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;color:white;flex-shrink:0;">👑</div>
+      <div>
+        <div class="mgmt-label">${mgmtUser.name}</div>
+        <div class="mgmt-sub">Acesso Total · Gerência</div>
+      </div>
+      <div style="margin-left:auto;color:rgba(0,212,255,0.7);font-size:18px;">›</div>
+    </div>`;
+  }
+
+  // Cards de Agências
+  if (agencies.length > 0) {
+    agencies.forEach((agency, idx) => {
+      const color = agency.color || agencyColors[idx % agencyColors.length];
+      const agencyAgents = byAgency[agency.id] || [];
+      const morning = agencyAgents.find(u => u.shift === 'morning');
+      const afternoon = agencyAgents.find(u => u.shift === 'afternoon');
+
+      const agentRows = [
+        morning ? { user: morning, emoji: '🌅', label: 'Turno Manhã' } : null,
+        afternoon ? { user: afternoon, emoji: '🌆', label: 'Turno Tarde' } : null,
+      ].filter(Boolean);
+
+      const agentHtml = agentRows.map(({ user: u, emoji, label }) => {
+        const initial = u.name.charAt(0).toUpperCase();
+        const shiftColor = u.shift === 'morning' ? '#F59E0B' : '#8B5CF6';
+        return `<div class="agent-btn" onclick="event.stopPropagation(); selectUser('${u.id}', '${u.name}', 'agent', '${label}', '${shiftColor}', '${initial}')">
+          <div class="agent-avatar" style="background:${shiftColor};">${initial}</div>
+          <div>
+            <div class="agent-name">${u.name}</div>
+            <div class="agent-shift">${emoji} ${label}</div>
+          </div>
+          <div class="agent-arrow">›</div>
+        </div>`;
+      }).join('');
+
+      html += `<div class="agency-login-card" id="agency-card-${agency.id}">
+        <div class="agency-login-header" onclick="toggleAgencyCard('${agency.id}')">
+          <div class="agency-login-badge" style="background:${color};">${agency.code}</div>
+          <div>
+            <div class="agency-login-name">${agency.name}</div>
+            <div class="agency-login-sub">${agentRows.length} agente${agentRows.length !== 1 ? 's' : ''}</div>
+          </div>
+          <div class="agency-login-chevron">›</div>
+        </div>
+        <div class="agency-agents">
+          ${agentHtml || '<div style="padding:8px;color:var(--muted);font-size:12px;">Sem agentes</div>'}
+        </div>
+      </div>`;
+    });
+  } else {
+    // Fallback: se não há agências carregadas, mostrar agentes directamente
+    for (const [aid, agts] of Object.entries(byAgency)) {
+      for (const u of agts) {
+        const color = agencyColors[Object.keys(byAgency).indexOf(aid) % agencyColors.length];
+        const initial = u.name.charAt(0).toUpperCase();
+        const sub = u.shift === 'morning' ? 'Manhã' : 'Tarde';
+        html += `<div class="user-card" onclick="selectUser('${u.id}', '${u.name}', 'agent', '${sub}', '${color}', '${initial}')">
+          <div class="avatar" style="background:${color};">${initial}</div>
+          <div class="user-name">${u.name}</div>
+          <div class="user-sub">${sub}</div>
+        </div>`;
+      }
+    }
+  }
+
+  grid.innerHTML = html;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ABA CONTA NO LOGIN (Contabilistas)
+// ═══════════════════════════════════════════════════════════════
+function switchLoginTab(tab) {
+  const isAgents = tab === 'agents';
+  document.getElementById('user-grid').style.display = isAgents ? '' : 'none';
+  document.getElementById('conta-grid').style.display = isAgents ? 'none' : '';
+  const btnAgents = document.getElementById('login-tab-agents');
+  const btnConta = document.getElementById('login-tab-conta');
+  btnAgents.style.background = isAgents ? 'rgba(255,255,255,0.2)' : 'transparent';
+  btnAgents.style.color = isAgents ? 'white' : 'rgba(255,255,255,0.6)';
+  btnAgents.style.fontWeight = isAgents ? '700' : '600';
+  btnConta.style.background = isAgents ? 'transparent' : 'rgba(255,255,255,0.2)';
+  btnConta.style.color = isAgents ? 'rgba(255,255,255,0.6)' : 'white';
+  btnConta.style.fontWeight = isAgents ? '600' : '700';
+  if (!isAgents) renderContaGrid();
+}
+
+function renderContaGrid() {
+  const accountants = (state.users || []).filter(u => u.role === 'accountant');
+  const contaGrid = document.getElementById('conta-grid');
+  if (!contaGrid) return;
+  if (accountants.length === 0) {
+    contaGrid.innerHTML = '<p style="color:rgba(255,255,255,0.7);text-align:center;padding:20px;">Sem contabilistas registados</p>';
+    return;
+  }
+  let html = '';
+  accountants.forEach(u => {
+    const zone = u.zone || '';
+    const icon = zone === 'Benguela' ? '🏢' : '🏙️';
+    const color = zone === 'Benguela' ? '#7C3AED' : '#0F766E';
+    const initial = u.name.charAt(0).toUpperCase();
+    html += `<div class="mgmt-card" onclick="selectUser('${u.id}', '${u.name}', 'accountant', 'Contabilista · ${zone}', '${color}', '${initial}')">
+      <div class="avatar" style="background:${color};width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:white;flex-shrink:0;">${icon}</div>
+      <div>
+        <div class="mgmt-label">${u.name}</div>
+        <div class="mgmt-sub">Contabilista · ${zone}</div>
+      </div>
+      <div style="margin-left:auto;color:rgba(0,212,255,0.7);font-size:18px;">›</div>
+    </div>`;
+  });
+  contaGrid.innerHTML = html;
+}
+
+function toggleAgencyCard(agencyId) {
+  const card = document.getElementById('agency-card-' + agencyId);
+  if (!card) return;
+  // Fechar todos os outros cards
+  document.querySelectorAll('.agency-login-card.expanded').forEach(c => {
+    if (c.id !== 'agency-card-' + agencyId) c.classList.remove('expanded');
+  });
+  card.classList.toggle('expanded');
+}
+
+function selectUser(id, name, role, sub, color, initial) {
+  selectedUserId = id;
+  pinValue = '';
+  document.getElementById('pin-user-name').textContent = name;
+  document.getElementById('pin-user-sub').textContent = sub;
+  document.getElementById('pin-user-avatar').textContent = initial;
+  document.getElementById('pin-user-avatar').style.background = color;
+  updatePinDots();
+  document.getElementById('pin-error').textContent = '';
+  document.getElementById('user-select-section').classList.add('hidden');
+  document.getElementById('pin-section').classList.remove('hidden');
+}
+
+function showUserSelect() {
+  // Se veio de acesso directo por URL, não mostrar a grelha (redirecionar para login limpo)
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('u')) {
+    // Remover parâmetro da URL e recarregar sem acesso directo
+    window.history.replaceState({}, '', window.location.pathname);
+  }
+  document.getElementById('user-select-section').classList.remove('hidden');
+  document.getElementById('pin-section').classList.add('hidden');
+  selectedUserId = null;
+  pinValue = '';
+}
+
+function pinPress(digit) {
+  if (pinValue.length >= 4) return;
+  pinValue += digit;
+  updatePinDots();
+  if (pinValue.length === 4) setTimeout(submitPin, 150);
+}
+
+function pinDelete() {
+  pinValue = pinValue.slice(0, -1);
+  updatePinDots();
+  document.getElementById('pin-error').textContent = '';
+}
+
+function updatePinDots() {
+  for (let i = 0; i < 4; i++) {
+    const dot = document.getElementById('dot-' + i);
+    dot.classList.toggle('filled', i < pinValue.length);
+  }
+}
+
+async function submitPin() {
+  try {
+    const data = await api('POST', '/api/auth/login', { userId: selectedUserId, pin: pinValue });
+    state.token = data.token;
+    state.user = data.user;
+    state.agency = data.agency;
+    localStorage.setItem('pazmar_token', data.token);
+    localStorage.setItem('pazmar_user', JSON.stringify(data.user));
+    localStorage.setItem('pazmar_agency', JSON.stringify(data.agency));
+    // Ligar WebSocket para sincronização em tempo real
+    setTimeout(connectWebSocket, 500);
+    if (data.user.role === 'management' || data.user.role === 'zone_manager' || data.user.role === 'accountant') {
+      await initManagement();
+    } else {
+      await initAgent();
+    }
+  } catch(e) {
+    document.getElementById('pin-error').textContent = e.message || 'PIN incorreto';
+    pinValue = '';
+    updatePinDots();
+  }
+}
+
+function logout() {
+  state.token = null;
+  state.user = null;
+  state.agency = null;
+  localStorage.removeItem('pazmar_token');
+  localStorage.removeItem('pazmar_user');
+  localStorage.removeItem('pazmar_agency');
+  pinValue = '';
+  selectedUserId = null;
+  showUserSelect();
+  initLogin();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// MANAGEMENT
+// ═══════════════════════════════════════════════════════════════
+
+// ─── Navegação de Data ───────────────────────────────────────────────────
+let selectedDate = getTodayDate();
+
+function navigateDate(delta) {
+  const d = new Date(selectedDate + 'T12:00:00');
+  d.setDate(d.getDate() + delta);
+  const today = getTodayDate();
+  const newDate = d.toISOString().slice(0, 10);
+  if (newDate > today) return;
+  selectedDate = newDate;
+  updateDateNav();
+  if (selectedDate === today) {
+    loadManagementDashboard();
+    loadDailyValidation();
+  } else {
+    loadDashboardForDate(selectedDate);
+    loadDailyValidationForDate(selectedDate);
+  }
+}
+
+function goToToday() {
+  selectedDate = getTodayDate();
+  updateDateNav();
+  loadManagementDashboard();
+  loadDailyValidation();
+}
+
+function updateDateNav() {
+  const today = getTodayDate();
+  const isToday = selectedDate === today;
+  const label = document.getElementById('date-nav-label');
+  const sub = document.getElementById('date-nav-sub');
+  const todayBtn = document.getElementById('date-nav-today-btn');
+  const nextBtn = document.getElementById('date-nav-next');
+  if (label) label.textContent = formatDate(selectedDate);
+  if (sub) sub.textContent = isToday ? 'Hoje' : 'Dia anterior';
+  if (todayBtn) todayBtn.style.display = isToday ? 'none' : 'inline-block';
+  if (nextBtn) nextBtn.disabled = isToday;
+}
+
+async function loadDashboardForDate(date) {
+  const el = document.getElementById('mgmt-dashboard-content');
+  el.innerHTML = '<div class="loading"><div class="spinner"></div> A carregar...</div>';
+  try {
+    const [dayData, rankingDaily] = await Promise.all([
+      api('GET', '/api/records/date/' + date),
+      api('GET', '/api/ranking/daily/' + date).catch(() => ({ ranking: [] })),
+    ]);
+    state.rankingDaily = rankingDaily.ranking || [];
+    renderHistoricalDashboard(dayData);
+  } catch(e) {
+    el.innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-text">Erro ao carregar dados</div></div>';
+  }
+}
+
+async function loadDailyValidationForDate(date) {
+  try {
+    todayValidation = await api('GET', '/api/daily-validation/' + date);
+  } catch(e) {
+    todayValidation = null;
+  }
+  renderValidationBar();
+}
+
+function renderHistoricalDashboard(dayData) {
+  const el = document.getElementById('mgmt-dashboard-content');
+  const { date, data, isLocked } = dayData;
+  const colors = ['#1A56DB','#7C3AED','#0F766E','#D97706','#DC2626','#16A34A','#0891B2','#9333EA'];
+  const zoneConfig = {
+    'Lobito':   { icon: '🏙️', color: '#00D4FF', bg: 'rgba(0,212,255,0.07)' },
+    'Benguela': { icon: '🌊', color: '#A78BFA', bg: 'rgba(167,139,250,0.07)' },
+  };
+  let lockedBanner = '';
+  if (isLocked) {
+    lockedBanner = `<div class="day-locked-banner"><span class="lock-icon">🔒</span><div><strong>Dia validado e bloqueado</strong><br><span style="font-size:11px;opacity:0.8">Para editar, desbloqueie o dia na barra de validação abaixo.</span></div></div>`;
+  }
+  const zones = {};
+  for (const item of data) {
+    const zone = item.agency.location || 'Sem Zona';
+    if (!zones[zone]) zones[zone] = [];
+    zones[zone].push(item);
+  }
+  let html = lockedBanner;
+  for (const [zoneName, items] of Object.entries(zones)) {
+    const cfg = zoneConfig[zoneName] || { icon: '📍', color: '#6B7280', bg: '#1a1a1a' };
+    let zoneOk = 0, zonePending = 0, zoneAlert = 0;
+    for (const item of items) {
+      for (const shift of ['morning', 'afternoon']) {
+        const r = item[shift];
+        if (!r || r.status === 'pending') zonePending++;
+        else if (r.status === 'ok') zoneOk++;
+        else zoneAlert++;
+      }
+    }
+    const zoneCountBadge = `<span style="font-size:11px;background:rgba(255,255,255,0.08);border-radius:6px;padding:2px 8px;color:var(--muted);">${items.length} agências</span>`;
+    const zoneStatusBadge = zonePending > 0
+      ? `<span style="font-size:11px;background:rgba(234,179,8,0.15);border-radius:6px;padding:2px 8px;color:#FCD34D;">⏳ ${zonePending}</span>`
+      : `<span style="font-size:11px;background:rgba(34,197,94,0.15);border-radius:6px;padding:2px 8px;color:#4ADE80;">✅ ${zoneOk}</span>`;
+    html += `<div class="zone-section" style="border-color:${cfg.color};background:${cfg.bg};margin-bottom:16px;">
+      <div class="zone-header">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:18px;">${cfg.icon}</span>
+          <div><div style="font-size:15px;font-weight:800;color:${cfg.color};">${zoneName}</div><div style="font-size:11px;color:var(--muted);">${zoneCountBadge}</div></div>
+        </div>
+        ${zoneStatusBadge}
+      </div>`;
+    for (const item of items) {
+      const a = item.agency;
+      const agencyColor = a.color || colors[items.indexOf(item) % colors.length];
+      html += `<div class="agency-card" style="margin-top:10px;">
+        <div class="agency-header">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div class="agency-badge" style="background:${agencyColor};">${a.code}</div>
+            <div>
+              <div class="agency-name">${a.name}</div>
+              <div class="agency-meta">${formatDate(date)} <span class="agency-location-badge" style="background:${cfg.color}22;color:${cfg.color};">${cfg.icon} ${a.location || ''}</span></div>
+            </div>
+          </div>
+        </div>
+        ${renderHistoricalShiftSection(a.id, 'morning', item.morning, 'Turno Manhã', date, isLocked)}
+        ${renderHistoricalShiftSection(a.id, 'afternoon', item.afternoon, 'Turno Tarde', date, isLocked)}
+      </div>`;
+    }
+    html += `<div style="height:4px;background:${cfg.color};border-radius:0 0 8px 8px;opacity:0.3;"></div></div>`;
+  }
+  const rankingCardHtml = `<div class="ranking-card" style="margin-top:16px;">
+    <div class="ranking-header">
+      <div><div class="ranking-title">🏆 Ranking de Rendimento</div><div class="ranking-subtitle">Comparação entre agências — ${formatDate(date)}</div></div>
+      <div class="ranking-tabs">
+        <button id="ranking-tab-daily" class="ranking-tab active" onclick="switchRankingTab('daily')">Hoje</button>
+        <button id="ranking-tab-alltime" class="ranking-tab" onclick="switchRankingTab('alltime')">Histórico</button>
+      </div>
+    </div>
+    <div id="ranking-list"></div>
+  </div>`;
+  el.innerHTML = html + rankingCardHtml;
+  rankingTab = 'daily';
+  renderRankingList(state.rankingDaily || [], 'daily');
+}
+
+function renderHistoricalShiftSection(agencyId, shift, record, shiftLabel, date, isLocked) {
+  const shiftEmoji = shift === 'morning' ? '🌅' : '🌆';
+  const managerInit = record ? record.initial_balance : null;
+  const agentInit = record ? record.agent_initial_balance : null;
+  const agentClose = record ? record.agent_closing_balance : null;
+  const bank = record ? record.bank_balance : null;
+  const diff = record ? record.difference : null;
+  const status = (record && record.status) ? record.status : 'pending';
+  const notes = (record && record.notes) ? record.notes : '';
+  const isAutoPropagated = shift === 'afternoon' && record && record.opened_by && record.opened_by.startsWith('auto_from_morning');
+  const totalInitial = (managerInit !== null && managerInit !== undefined && agentInit !== null && agentInit !== undefined) ? (managerInit + agentInit) : null;
+  const editedNote = (record && record.edited_at) ? `<span style="font-size:10px;color:var(--muted);margin-left:6px;">✏️ editado</span>` : '';
+  const autoPropBadge = isAutoPropagated && managerInit !== null ? '<span style="font-size:9px;background:#0F766E;color:#fff;padding:1px 4px;border-radius:4px;margin-left:3px;">↩ manhã</span>' : '';
+  if (isLocked) {
+    return `<div class="hist-shift-section">
+      <div class="hist-shift-title">${shiftEmoji} ${shiftLabel} ${statusBadge(status)} ${editedNote}</div>
+      <div class="shift-values">
+        <div class="shift-value-item"><div class="shift-value-label">Inicial Gerência ${autoPropBadge}</div><div class="shift-value-num" style="color:var(--primary)">${fmtCurrency(managerInit)}</div></div>
+        <div class="shift-value-item"><div class="shift-value-label">Inicial Agente</div><div class="shift-value-num" style="color:#7C3AED">${fmtCurrency(agentInit)}</div></div>
+        <div class="shift-value-item"><div class="shift-value-label">Físico (Agente)</div><div class="shift-value-num" style="color:var(--success)">${fmtCurrency(agentClose)}</div></div>
+        <div class="shift-value-item"><div class="shift-value-label">Bancário</div><div class="shift-value-num" style="color:#0F766E">${fmtCurrency(bank)}</div></div>
+      </div>
+      ${diff !== null && diff !== undefined ? `<div class="diff-result ${diffClassFull(status, diff)}" style="margin-top:8px;"><div><div class="diff-label" style="color:${diff > 0 ? '#FFD700' : statusColors(status)}">${diff > 0 ? '✨ Excedente' : 'Diferença'}</div><div style="font-size:11px;color:${diff > 0 ? 'rgba(255,215,0,0.8)' : statusColors(status)};opacity:0.9;">Esperado: ${fmtCurrency(totalInitial)} | Real: ${fmtCurrency((agentClose||0)+(bank||0))}</div></div>${diff > 0 ? `<div class="diff-value-surplus">+${fmtCurrency(diff)} a mais</div>` : `<div class="diff-value" style="color:${statusColors(status)}">${fmtCurrency(diff)}</div>`}</div>` : ''}
+      ${notes ? `<div style="font-size:11px;color:var(--muted);margin-top:6px;">📝 ${notes}</div>` : ''}
+    </div>`;
+  }
+  const safeId = agencyId + '_' + shift;
+  return `<div class="hist-shift-section">
+    <div class="hist-shift-title">${shiftEmoji} ${shiftLabel} ${statusBadge(status)} ${editedNote}</div>
+    <div class="edit-field-row">
+      <span class="edit-field-label">Inicial Gerência ${autoPropBadge}</span>
+      <input class="edit-field-input" id="ef_${safeId}_initial_balance" type="number" value="${managerInit !== null && managerInit !== undefined ? managerInit : ''}" placeholder="—">
+      <button class="edit-field-save-btn" onclick="saveHistField('${agencyId}','${shift}','${date}','initial_balance','ef_${safeId}_initial_balance')">Guardar</button>
+    </div>
+    <div class="edit-field-row">
+      <span class="edit-field-label">Inicial Agente</span>
+      <input class="edit-field-input" id="ef_${safeId}_agent_initial_balance" type="number" value="${agentInit !== null && agentInit !== undefined ? agentInit : ''}" placeholder="—">
+      <button class="edit-field-save-btn" onclick="saveHistField('${agencyId}','${shift}','${date}','agent_initial_balance','ef_${safeId}_agent_initial_balance')">Guardar</button>
+    </div>
+    <div class="edit-field-row">
+      <span class="edit-field-label">Físico (Agente)</span>
+      <input class="edit-field-input" id="ef_${safeId}_agent_closing_balance" type="number" value="${agentClose !== null && agentClose !== undefined ? agentClose : ''}" placeholder="—">
+      <button class="edit-field-save-btn" onclick="saveHistField('${agencyId}','${shift}','${date}','agent_closing_balance','ef_${safeId}_agent_closing_balance')">Guardar</button>
+    </div>
+    <div class="edit-field-row">
+      <span class="edit-field-label">Bancário</span>
+      <input class="edit-field-input" id="ef_${safeId}_bank_balance" type="number" value="${bank !== null && bank !== undefined ? bank : ''}" placeholder="—">
+      <button class="edit-field-save-btn" onclick="saveHistField('${agencyId}','${shift}','${date}','bank_balance','ef_${safeId}_bank_balance')">Guardar</button>
+    </div>
+    <div style="margin-top:8px;">
+      <span class="edit-field-label" style="display:block;margin-bottom:4px;">Notas</span>
+      <div style="display:flex;gap:6px;">
+        <textarea class="edit-notes-input" id="ef_${safeId}_notes" rows="2" placeholder="Notas opcionais...">${notes}</textarea>
+        <button class="edit-field-save-btn" style="align-self:flex-start;" onclick="saveHistField('${agencyId}','${shift}','${date}','notes','ef_${safeId}_notes')">Guardar</button>
+      </div>
+    </div>
+    ${diff !== null && diff !== undefined ? `<div class="diff-result ${diffClassFull(status, diff)}" style="margin-top:8px;"><div><div class="diff-label" style="color:${diff > 0 ? '#FFD700' : statusColors(status)}">${diff > 0 ? '✨ Excedente' : 'Diferença'}</div><div style="font-size:11px;color:${diff > 0 ? 'rgba(255,215,0,0.8)' : statusColors(status)};opacity:0.9;">Esperado: ${fmtCurrency(totalInitial)} | Real: ${fmtCurrency((agentClose||0)+(bank||0))}</div></div>${diff > 0 ? `<div class="diff-value-surplus">+${fmtCurrency(diff)} a mais</div>` : `<div class="diff-value" style="color:${statusColors(status)}">${fmtCurrency(diff)}</div>`}</div>` : ''}
+  </div>`;
+}
+
+async function saveHistField(agencyId, shift, date, field, inputId) {
+  const input = document.getElementById(inputId);
+  if (!input) return;
+  const rawVal = input.value.trim();
+  const value = rawVal === '' ? null : (field === 'notes' ? rawVal : parseFloat(rawVal));
+  input.classList.add('saving');
+  try {
+    await api('PUT', '/api/records/edit', { agencyId, date, shift, field, value });
+    input.classList.remove('saving');
+    input.style.borderColor = 'var(--success)';
+    setTimeout(() => { input.style.borderColor = ''; }, 1500);
+    await loadDashboardForDate(date);
+  } catch(e) {
+    input.classList.remove('saving');
+    input.style.borderColor = 'var(--danger)';
+    alert('Erro ao guardar: ' + (e.message || e));
+    setTimeout(() => { input.style.borderColor = ''; }, 2000);
+  }
+}
+
+async function initManagement() {
+  showScreen('management');
+  selectedDate = getTodayDate();
+  const topbarTitle = document.getElementById('mgmt-topbar-title');
+  const topbarSub = document.getElementById('mgmt-date-label');
+  if (topbarTitle) topbarTitle.textContent = 'Pazmar Balance';
+  if (topbarSub) topbarSub.textContent = '';
+  updateDateNav();
+
+  // Contabilistas vão directamente para a aba Contas
+  if (state.user && state.user.role === 'accountant') {
+    // Ocultar abas que não são para contabilistas
+    ['tab-mgmt-dashboard','tab-mgmt-deposits','tab-mgmt-gato','tab-mgmt-settings'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = 'none';
+    });
+    // Actualizar título da topbar
+    const zone = state.user.zone || '';
+    const topbarTitle = document.getElementById('mgmt-topbar-title');
+    if (topbarTitle) topbarTitle.textContent = `Contas · ${zone}`;
+    switchMgmtTab('accounts');
+    return;
+  }
+  // Garantir que as abas estão visíveis para outros perfis
+  ['tab-mgmt-dashboard','tab-mgmt-deposits','tab-mgmt-gato','tab-mgmt-settings'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = '';
+  });
+
+  await loadManagementDashboard();
+  await loadSettingsData();
+  await loadDailyValidation();
+}
+
+async function loadManagementDashboard() {
+  const el = document.getElementById('mgmt-dashboard-content');
+  el.innerHTML = '<div class="loading"><div class="spinner"></div> A carregar...</div>';
+  // Se não é hoje, usar o endpoint histórico
+  if (selectedDate && selectedDate !== getTodayDate()) {
+    return loadDashboardForDate(selectedDate);
+  }
+  try {
+    const today = getTodayDate();
+    const [records, agencies, rankingDaily, allUsers] = await Promise.all([
+      api('GET', '/api/records/today'),
+      api('GET', '/api/agencies'),
+      api('GET', '/api/ranking/daily/' + today).catch(() => ({ ranking: [] })),
+      api('GET', '/api/users/all').catch(() => []),
+    ]);
+    state.todayRecords = records;
+    state.agencies = agencies;
+    state.rankingDaily = rankingDaily.ranking || [];
+    state.users = allUsers;
+    renderManagementDashboard(agencies, records);
+  } catch(e) {
+    el.innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-text">Erro ao carregar dados</div></div>';
+  }
+}
+
+// ─── Ranking State ────────────────────────────────────────────
+let rankingTab = 'daily'; // 'daily' | 'alltime'
+let rankingAlltimeCache = null;
+
+async function switchRankingTab(tab) {
+  rankingTab = tab;
+  const dailyBtn = document.getElementById('ranking-tab-daily');
+  const alltimeBtn = document.getElementById('ranking-tab-alltime');
+  if (dailyBtn) dailyBtn.classList.toggle('active', tab === 'daily');
+  if (alltimeBtn) alltimeBtn.classList.toggle('active', tab === 'alltime');
+  if (tab === 'alltime') {
+    if (!rankingAlltimeCache) {
+      const el = document.getElementById('ranking-list');
+      if (el) el.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+      try {
+        const data = await api('GET', '/api/ranking/alltime');
+        rankingAlltimeCache = data.ranking || [];
+      } catch(e) {
+        rankingAlltimeCache = [];
+      }
+    }
+    renderRankingList(rankingAlltimeCache, 'alltime');
+  } else {
+    renderRankingList(state.rankingDaily || [], 'daily');
+  }
+}
+
+function renderRankingList(ranking, mode) {
+  const el = document.getElementById('ranking-list');
+  if (!el) return;
+  if (!ranking || !ranking.length) {
+    el.innerHTML = '<div style="padding:16px;text-align:center;color:var(--muted);font-size:13px;">Sem dados disponíveis</div>';
+    return;
+  }
+
+  // Find max absolute rendimento for bar scaling
+  const maxAbs = Math.max(...ranking.filter(r => r.rendimento !== null).map(r => Math.abs(r.rendimento)), 1);
+
+  let html = '';
+  ranking.forEach((item, idx) => {
+    const pos = idx + 1;
+    const posClass = pos === 1 ? 'ranking-pos-1' : pos === 2 ? 'ranking-pos-2' : pos === 3 ? 'ranking-pos-3' : 'ranking-pos-n';
+    const posLabel = pos === 1 ? '🥇' : pos === 2 ? '🥈' : pos === 3 ? '🥉' : pos;
+
+    const hasData = item.rendimento !== null;
+    const rend = hasData ? item.rendimento : null;
+    const rendStr = hasData ? (rend >= 0 ? '+' : '') + fmtCurrency(rend) : '—';
+    const rendClass = !hasData ? '' : rend >= 0 ? 'ranking-value-pos' : 'ranking-value-neg';
+    const barPct = hasData ? Math.round((Math.abs(rend) / maxAbs) * 100) : 0;
+    const barColor = !hasData ? 'var(--border)' : rend >= 0 ? 'var(--success)' : 'var(--danger)';
+
+    let subText = '';
+    if (mode === 'alltime' && item.totalDays) {
+      subText = `${item.totalDays} dia${item.totalDays > 1 ? 's' : ''} · ${item.totalShifts} turno${item.totalShifts > 1 ? 's' : ''}`;
+    } else if (mode === 'daily') {
+      subText = item.shiftsCount ? `${item.shiftsCount} turno${item.shiftsCount > 1 ? 's' : ''}` : 'Sem registos';
+    }
+
+    html += `<div class="ranking-row">
+      <div class="ranking-pos ${posClass}">${posLabel}</div>
+      <div class="agency-badge" style="background:${item.agencyColor};width:28px;height:28px;border-radius:8px;font-size:10px;flex-shrink:0;">${item.agencyCode}</div>
+      <div class="ranking-agency">
+        <div class="ranking-agency-name">${item.agencyName}</div>
+        <div class="ranking-agency-sub">${subText}</div>
+      </div>
+      <div class="ranking-bar-wrap">
+        <div class="ranking-bar-bg">
+          <div class="ranking-bar-fill" style="width:${barPct}%;background:${barColor};"></div>
+        </div>
+      </div>
+      <div class="ranking-value ${rendClass}">${rendStr}</div>
+    </div>`;
+  });
+  el.innerHTML = html;
+}
+
+// ─── Validação Diária ─────────────────────────────────────────
+let todayValidation = null;
+
+async function loadDailyValidation() {
+  const dateToUse = (typeof selectedDate !== 'undefined' && selectedDate) ? selectedDate : getTodayDate();
+  try {
+    todayValidation = await api('GET', '/api/daily-validation/' + dateToUse);
+  } catch(e) {
+    todayValidation = null;
+  }
+  renderValidationBar();
+}
+
+function renderValidationBar() {
+  const bar = document.getElementById('validation-bar');
+  if (!bar) return;
+  const v = todayValidation;
+  const isValidated = v && !v.unlocked_at;
+  if (isValidated) {
+    const dt = new Date(v.validated_at).toLocaleTimeString('pt-AO', { hour: '2-digit', minute: '2-digit' });
+    bar.innerHTML = `
+      <div style="background:#DCFCE7;border:1.5px solid #86EFAC;border-radius:12px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-size:22px;">✅</span>
+          <div>
+            <div style="font-weight:700;font-size:14px;color:#15803D;">Dia Validado</div>
+            <div style="font-size:12px;color:#166534;">Validado às ${dt} · ✅ ${v.ok_count} OK · ⚠️ ${v.warning_count+v.medium_count} Dif. · 🔴 ${v.alert_count} Alerta · ⏳ ${v.pending_count} Pend.</div>
+          </div>
+        </div>
+        <button onclick="unlockDay()" style="background:#15803D;color:white;border:none;border-radius:8px;padding:7px 12px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;">🔓 Desbloquear</button>
+      </div>`;
+  } else if (v && v.unlocked_at) {
+    bar.innerHTML = `
+      <div style="background:#FEF9C3;border:1.5px solid #FDE047;border-radius:12px;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;">
+        <div style="font-size:13px;color:#A16207;">🔓 Dia desbloqueado para edição</div>
+        <button onclick="openValidateDayModal()" style="background:#D97706;color:white;border:none;border-radius:8px;padding:7px 12px;font-size:12px;font-weight:600;cursor:pointer;">✅ Re-validar</button>
+      </div>`;
+  } else {
+    bar.innerHTML = `
+      <button onclick="openValidateDayModal()" class="summary-btn" style="background:#15803D;margin-bottom:0;">
+        ✅ Validar Dia de Trabalho
+      </button>`;
+  }
+}
+
+async function openValidateDayModal() {
+  // Carregar resumo do dia para mostrar no modal
+  try {
+    const data = await api('GET', '/api/records/summary/' + getTodayDate());
+    let stats = { ok:0, warning:0, medium:0, alert:0, pending:0 };
+    for (const item of data.summary) {
+      for (const shift of ['morning', 'afternoon']) {
+        const r = item[shift];
+        if (!r) { stats.pending++; continue; }
+        stats[r.status] = (stats[r.status] || 0) + 1;
+      }
+    }
+    const totalShifts = data.summary.length * 2;
+    const hasPending = stats.pending > 0;
+    const hasAlert = stats.alert > 0;
+
+    let warningHtml = '';
+    if (hasPending) warningHtml += `<div style="background:#FEF9C3;border-radius:8px;padding:10px 12px;margin-bottom:8px;font-size:13px;color:#A16207;">⚠️ ${stats.pending} turno${stats.pending>1?'s':''} ainda pendente${stats.pending>1?'s':''}. Pode validar na mesma, mas ficará registado.</div>`;
+    if (hasAlert) warningHtml += `<div style="background:#FEE2E2;border-radius:8px;padding:10px 12px;margin-bottom:8px;font-size:13px;color:#B91C1C;">🔴 ${stats.alert} turno${stats.alert>1?'s':''} com diferença grande.</div>`;
+
+    document.getElementById('validate-day-stats').innerHTML = `
+      ${warningHtml}
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:12px;">
+        <div style="background:#DCFCE7;border-radius:10px;padding:10px;text-align:center;"><div style="font-size:20px;font-weight:700;color:#15803D;">${stats.ok}</div><div style="font-size:11px;color:#166534;">✅ OK</div></div>
+        <div style="background:#FEF9C3;border-radius:10px;padding:10px;text-align:center;"><div style="font-size:20px;font-weight:700;color:#A16207;">${stats.warning+stats.medium}</div><div style="font-size:11px;color:#A16207;">⚠️ Diferença</div></div>
+        <div style="background:#FEE2E2;border-radius:10px;padding:10px;text-align:center;"><div style="font-size:20px;font-weight:700;color:#B91C1C;">${stats.alert}</div><div style="font-size:11px;color:#B91C1C;">🔴 Alerta</div></div>
+        <div style="background:#F3F4F6;border-radius:10px;padding:10px;text-align:center;"><div style="font-size:20px;font-weight:700;color:#6B7280;">${stats.pending}</div><div style="font-size:11px;color:#6B7280;">⏳ Pendente</div></div>
+      </div>
+      <div style="font-size:12px;color:var(--muted);text-align:center;">${totalShifts} turnos no total · ${formatDate(getTodayDate())}</div>`;
+    document.getElementById('modal-validate-day').classList.remove('hidden');
+    document.getElementById('validate-notes').value = '';
+  } catch(e) {
+    showToast('❌ Erro ao carregar resumo: ' + (e.message||''));
+  }
+}
+
+function closeValidateDayModal() {
+  document.getElementById('modal-validate-day').classList.add('hidden');
+}
+
+async function submitValidateDay() {
+  const notes = document.getElementById('validate-notes').value;
+  try {
+    todayValidation = await api('POST', '/api/daily-validation/' + (selectedDate || getTodayDate()), { notes });
+    closeValidateDayModal();
+    showToast('✅ Dia validado com sucesso!');
+    renderValidationBar();
+    await loadSettingsValidations();
+  } catch(e) {
+    showToast('❌ ' + (e.message||'Erro ao validar'));
+  }
+}
+
+async function unlockDay() {
+  if (!confirm('Desbloquear o dia para permitir edições? A validação será removida.')) return;
+  try {
+    todayValidation = await api('POST', '/api/daily-validation/' + (selectedDate || getTodayDate()) + '/unlock');
+    showToast('🔓 Dia desbloqueado');
+    renderValidationBar();
+  } catch(e) {
+    showToast('❌ ' + (e.message||'Erro'));
+  }
+}
+
+async function loadSettingsValidations() {
+  try {
+    const validations = await api('GET', '/api/daily-validations');
+    renderSettingsValidations(validations);
+  } catch(e) {}
+}
+
+function renderSettingsValidations(validations) {
+  const el = document.getElementById('settings-validations-list');
+  if (!el) return;
+  if (!validations.length) {
+    el.innerHTML = '<div style="font-size:13px;color:var(--muted);padding:8px 0;">Nenhum dia validado ainda.</div>';
+    return;
+  }
+  el.innerHTML = validations.map(v => {
+    const dt = new Date(v.validated_at).toLocaleDateString('pt-AO', { weekday:'short', day:'numeric', month:'short' });
+    const isUnlocked = !!v.unlocked_at;
+    const statusIcon = isUnlocked ? '🔓' : '✅';
+    const statusColor = isUnlocked ? '#A16207' : '#15803D';
+    const statusBg = isUnlocked ? '#FEF9C3' : '#DCFCE7';
+    return `
+    <div style="background:var(--surface);border-radius:10px;padding:12px 14px;margin-bottom:6px;border-left:4px solid ${statusColor};border:1px solid var(--border);">
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <div>
+          <div style="font-weight:700;font-size:14px;">${dt}</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px;">✅ ${v.ok_count} · ⚠️ ${v.warning_count+v.medium_count} · 🔴 ${v.alert_count} · ⏳ ${v.pending_count}</div>
+        </div>
+        <span style="background:${statusBg};color:${statusColor};padding:3px 8px;border-radius:8px;font-size:11px;font-weight:600;">${statusIcon} ${isUnlocked ? 'Desbloqueado' : 'Validado'}</span>
+      </div>
+      ${v.notes ? `<div style="font-size:12px;color:var(--muted);margin-top:6px;font-style:italic;">📝 ${v.notes}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function getRecord(records, agencyId, shift) {
+  return records.find(r => r.agency_id === agencyId && r.shift === shift) || null;
+}
+
+function statusBadge(status) {
+  const map = {
+    ok: ['✅', 'OK', 'status-ok'],
+    warning: ['⚠️', 'Dif. Pequena', 'status-warning'],
+    medium: ['🟠', 'Dif. Média', 'status-medium'],
+    alert: ['🔴', 'Dif. Grande', 'status-alert'],
+    pending: ['⏳', 'Pendente', 'status-pending'],
+  };
+  const [icon, label, cls] = map[status] || map.pending;
+  return `<span class="status-badge ${cls}">${icon} ${label}</span>`;
+}
+
+function diffClass(status) {
+  return { ok:'diff-ok', warning:'diff-warning', medium:'diff-medium', alert:'diff-alert', pending:'diff-pending' }[status] || 'diff-pending';
+}
+function diffClassFull(status, diff) {
+  if (diff !== null && diff !== undefined && diff > 0) return 'diff-surplus';
+  return diffClass(status);
+}
+
+function renderShiftSection(agencyId, shift, record, shiftLabel, agentName) {
+  const shiftEmoji = shift === 'morning' ? '🌅' : '🌆';
+  const managerInit = record?.initial_balance;
+  const agentInit = record?.agent_initial_balance;
+  const agentClose = record?.agent_closing_balance;
+  const bank = record?.bank_balance;
+  const diff = record?.difference;
+  const status = record?.status || 'pending';
+  // Indica se o inicial da tarde foi propagado automaticamente do bancário da manhã
+  const isAutoPropagated = shift === 'afternoon' && record?.opened_by === 'auto_from_morning';
+
+  const totalInitial = (managerInit !== null && managerInit !== undefined && agentInit !== null && agentInit !== undefined)
+    ? (managerInit + agentInit) : null;
+
+  const agentTag = agentName ? `<span style="font-size:10px;color:var(--muted);margin-left:6px;font-weight:500;">👤 ${agentName}</span>` : '';
+  return `<div class="shift-row">
+    <div class="shift-label">${shiftEmoji} ${shiftLabel}
+      ${record ? statusBadge(status) : statusBadge('pending')}
+      ${agentTag}
+    </div>
+    <div class="shift-values">
+      <div class="shift-value-item">
+        <div class="shift-value-label">Inicial Gerência
+          ${isAutoPropagated && managerInit !== null && managerInit !== undefined
+            ? '<span style="font-size:9px;background:#0F766E;color:#fff;padding:1px 4px;border-radius:4px;margin-left:3px;vertical-align:middle">↩ da manhã</span>'
+            : ''}
+        </div>
+        <div class="shift-value-num" style="color:var(--primary)">${fmtCurrency(managerInit)}</div>
+      </div>
+      <div class="shift-value-item">
+        <div class="shift-value-label">Inicial Agente</div>
+        <div class="shift-value-num" style="color:#7C3AED">${fmtCurrency(agentInit)}</div>
+      </div>
+      <div class="shift-value-item">
+        <div class="shift-value-label">Físico (Agente)</div>
+        <div class="shift-value-num" style="color:var(--success)">${fmtCurrency(agentClose)}</div>
+      </div>
+      <div class="shift-value-item">
+        <div class="shift-value-label">Bancário</div>
+        <div class="shift-value-num" style="color:#0F766E">${fmtCurrency(bank)}</div>
+      </div>
+    </div>
+    ${diff !== null && diff !== undefined ? `
+    <div class="diff-result ${diffClassFull(status, diff)}">
+      <div>
+        <div class="diff-label" style="color:${diff > 0 ? '#FFD700' : statusColors(status)}">${diff > 0 ? '✨ Excedente' : 'Diferença'}</div>
+        <div style="font-size:11px;color:${diff > 0 ? 'rgba(255,215,0,0.8)' : statusColors(status)};opacity:0.9;">
+          Esperado: ${fmtCurrency(totalInitial)} | Real: ${fmtCurrency((agentClose||0)+(bank||0))}
+        </div>
+      </div>
+      ${diff > 0
+        ? `<div class="diff-value-surplus">+${fmtCurrency(diff)} a mais</div>`
+        : `<div class="diff-value" style="color:${statusColors(status)}">${diff === 0 ? '' : ''}${fmtCurrency(diff)}</div>`
+      }
+    </div>` : ''}
+    <div class="shift-actions mt-2">
+      <button class="btn btn-primary btn-sm" onclick="openValueModal('set_manager_initial','${agencyId}','${shift}',${JSON.stringify(managerInit)})">🏦 Inicial</button>
+      <button class="btn btn-teal btn-sm" onclick="openValueModal('confirm_bank','${agencyId}','${shift}',${JSON.stringify(bank)})">🏧 Bancário</button>
+      <button class="btn btn-outline btn-sm" onclick="openMovementModal('${agencyId}','${shift}','first',${JSON.stringify(record?.first_movement_type||null)})">⬆️ 1º Mov.</button>
+      <button class="btn btn-outline btn-sm" onclick="openMovementModal('${agencyId}','${shift}','last',${JSON.stringify(record?.last_movement_type||null)})">⬇️ Últ. Mov.</button>
+    </div>
+  </div>`;
+}
+
+function statusColors(status) {
+  return { ok:'#15803D', warning:'#A16207', medium:'#C2410C', alert:'#B91C1C', pending:'#6B7280' }[status] || '#6B7280';
+}
+
+function renderManagementDashboard(agencies, records) {
+  const el = document.getElementById('mgmt-dashboard-content');
+  if (!agencies.length) {
+    el.innerHTML = '<div class="empty"><div class="empty-icon">🏢</div><div class="empty-text">Sem agências</div><div class="empty-sub">Adicione agências em Definições</div></div>';
+    return;
+  }
+  const colors = ['#1A56DB','#7C3AED','#0F766E','#D97706','#DC2626','#16A34A','#0891B2','#9333EA'];
+  const zoneConfig = {
+    'Lobito':   { icon: '🏙️', color: '#00D4FF' },
+    'Benguela': { icon: '🌊', color: '#A78BFA' },
+  };
+
+  // Obter agentes por agência (do state.users)
+  const agentsByAgency = {};
+  for (const u of (state.users || [])) {
+    if (u.role === 'agent' && u.agency_id) {
+      if (!agentsByAgency[u.agency_id]) agentsByAgency[u.agency_id] = {};
+      agentsByAgency[u.agency_id][u.shift] = u.name;
+    }
+  }
+
+  let html = '';
+  for (const a of agencies) {
+    const color = a.color || colors[0];
+    const morning = getRecord(records, a.id, 'morning');
+    const afternoon = getRecord(records, a.id, 'afternoon');
+    const zoneCfg = zoneConfig[a.location] || { icon: '📍', color: '#6B7280' };
+    const morningAgent = agentsByAgency[a.id]?.morning || null;
+    const afternoonAgent = agentsByAgency[a.id]?.afternoon || null;
+
+    // Status badges
+    const mStatus = morning?.status || 'pending';
+    const aStatus = afternoon?.status || 'pending';
+    const allOk = mStatus === 'ok' && aStatus === 'ok';
+    const hasAlert = ['alert','medium','warning'].includes(mStatus) || ['alert','medium','warning'].includes(aStatus);
+    const statusSummary = allOk
+      ? `<span style="background:rgba(34,197,94,0.15);color:#4ADE80;padding:2px 8px;border-radius:8px;font-size:11px;font-weight:700;">✅ OK</span>`
+      : hasAlert
+        ? `<span style="background:rgba(239,68,68,0.15);color:#F87171;padding:2px 8px;border-radius:8px;font-size:11px;font-weight:700;">⚠️ Alerta</span>`
+        : `<span style="background:rgba(107,114,128,0.15);color:#9CA3AF;padding:2px 8px;border-radius:8px;font-size:11px;font-weight:700;">⏳ Pend.</span>`;
+
+    html += `<div class="agency-card" style="margin-bottom:12px;border-radius:14px;overflow:hidden;">
+      <div class="agency-card-header" style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:rgba(255,255,255,0.03);border-bottom:1px solid rgba(255,255,255,0.06);">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div class="agency-badge" style="background:${color};width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;color:#fff;flex-shrink:0;">${a.code}</div>
+          <div>
+            <div class="agency-name" style="font-weight:800;font-size:15px;">${a.name}</div>
+            <div style="font-size:11px;color:var(--muted);display:flex;align-items:center;gap:5px;">
+              <span style="color:${zoneCfg.color};">${zoneCfg.icon} ${a.location || ''}</span>
+              <span>·</span>
+              <span>${formatDate(getTodayDate())}</span>
+            </div>
+          </div>
+        </div>
+        ${statusSummary}
+      </div>
+      ${renderShiftSection(a.id, 'morning', morning, 'Turno Manhã', morningAgent)}
+      ${renderShiftSection(a.id, 'afternoon', afternoon, 'Turno Tarde', afternoonAgent)}
+    </div>`;
+  }
+
+  // ─── Ranking Card ───────────────────────────────────────────
+  const rankingCardHtml = `<div class="ranking-card" style="margin-top:16px;">
+    <div class="ranking-header">
+      <div>
+        <div class="ranking-title">🏆 Ranking de Rendimento</div>
+        <div class="ranking-subtitle">Comparação entre agências</div>
+      </div>
+      <div class="ranking-tabs">
+        <button id="ranking-tab-daily" class="ranking-tab active" onclick="switchRankingTab('daily')">Hoje</button>
+        <button id="ranking-tab-alltime" class="ranking-tab" onclick="switchRankingTab('alltime')">Histórico</button>
+      </div>
+    </div>
+    <div id="ranking-list"></div>
+  </div>`;
+
+  el.innerHTML = html + rankingCardHtml;
+  rankingTab = 'daily';
+  renderRankingList(state.rankingDaily || [], 'daily');
+}
+
+// ═════════════════════════════════════════════════════════════
+// AGENT
+// ═══════════════════════════════════════════════════════════════
+async function initAgent() {
+  showScreen('agent');
+  document.getElementById('agent-topbar-title').textContent = state.user.name;
+  document.getElementById('agent-topbar-sub').textContent = state.agency?.name + ' · ' + (state.user.shift === 'morning' ? 'Turno Manhã' : 'Turno Tarde');
+  await loadAgentView();
+}
+
+async function loadAgentView() {
+  const el = document.getElementById('agent-content');
+  el.innerHTML = '<div class="loading"><div class="spinner"></div> A carregar...</div>';
+  try {
+    const records = await api('GET', '/api/records/today');
+    const myShift = state.user.shift;
+    const record = records.find(r => r.agency_id === state.user.agencyId && r.shift === myShift) || null;
+    renderAgentView(record, myShift);
+  } catch(e) {
+    el.innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-text">Erro ao carregar</div></div>';
+  }
+}
+
+function renderAgentView(record, shift) {
+  const el = document.getElementById('agent-content');
+  const shiftLabel = shift === 'morning' ? 'Turno Manhã 🌅' : 'Turno Tarde 🌆';
+  const agencyName = state.agency?.name || 'Agência';
+
+  const agentInit = record?.agent_initial_balance;
+  const agentClose = record?.agent_closing_balance;
+  const status = record?.status || 'pending';
+  const diff = record?.difference;
+
+  // Agent sees: own initial, own closing, result — NOT manager initial
+  const managerSet = record?.initial_balance !== null && record?.initial_balance !== undefined;
+
+  let resultHtml = '';
+  if (diff !== null && diff !== undefined) {
+    if (diff > 0) {
+      // Excedente cintilante
+      resultHtml = `<div class="agent-result-box diff-surplus" style="padding:14px;border-radius:12px;">
+        <div class="diff-label" style="color:#FFD700;font-size:13px;">✨ Excedente — Há mais dinheiro do que o esperado!</div>
+        <div class="diff-value-surplus" style="font-size:20px;margin:6px 0;">+${fmtCurrency(diff)} a mais</div>
+        <div style="font-size:11px;color:rgba(255,215,0,0.7);">O valor real supera o esperado</div>
+      </div>`;
+    } else {
+      const bgMap = { ok:'var(--success-dim)', warning:'var(--warning-dim)', medium:'var(--medium-dim)', alert:'var(--danger-dim)', pending:'rgba(255,255,255,0.03)' };
+      const colorMap = { ok:'var(--success)', warning:'var(--warning)', medium:'var(--medium)', alert:'var(--danger)', pending:'var(--muted)' };
+      const labelMap = { ok:'✅ Tudo OK — Saldo confere!', warning:'⚠️ Diferença Pequena', medium:'🟠 Diferença Média', alert:'🔴 Diferença Grande — Verificar!', pending:'⏳ Aguarda confirmação' };
+      const bg = bgMap[status] || bgMap.pending;
+      const color = colorMap[status] || colorMap.pending;
+      const label = labelMap[status] || labelMap.pending;
+      resultHtml = `<div class="agent-result-box" style="background:${bg};">
+        <div class="agent-result-label" style="color:${color}">${label}</div>
+        <div class="agent-result-value" style="color:${color}">${diff === 0 ? '0' : fmtCurrency(diff)}</div>
+        <div class="agent-result-desc" style="color:${color}">Diferença entre o esperado e o verificado</div>
+      </div>`;
+    }
+  } else if (!managerSet) {
+    resultHtml = `<div class="agent-result-box" style="background:#EFF6FF;">
+      <div class="agent-result-label" style="color:#1D4ED8">⏳ A aguardar saldo inicial da Gerência</div>
+      <div class="agent-result-desc" style="color:#1D4ED8;margin-top:4px;">A Gerência ainda não definiu o saldo inicial deste turno</div>
+    </div>`;
+  }
+
+  el.innerHTML = `
+    <div style="margin-bottom:12px;">
+      <div style="font-size:13px;color:var(--muted);margin-bottom:4px;">${formatDate(getTodayDate())}</div>
+      <div style="font-size:20px;font-weight:800;">${agencyName}</div>
+      <div style="font-size:14px;color:var(--muted);">${shiftLabel}</div>
+    </div>
+
+    <div class="agent-shift-card">
+      <div class="agent-shift-header">
+        <div>
+          <div class="agent-shift-title">Resumo do Turno</div>
+          <div class="agent-shift-sub">Os seus valores registados</div>
+        </div>
+        ${statusBadge(status)}
+      </div>
+
+      <div style="padding:0 16px 8px;">
+        <div class="shift-values" style="grid-template-columns:1fr 1fr;gap:8px;">
+          <div class="shift-value-item">
+            <div class="shift-value-label">Meu Inicial</div>
+            <div class="shift-value-num" style="color:#7C3AED">${fmtCurrency(agentInit)}</div>
+          </div>
+          <div class="shift-value-item">
+            <div class="shift-value-label">Físico (Fecho)</div>
+            <div class="shift-value-num" style="color:var(--success)">${fmtCurrency(agentClose)}</div>
+          </div>
+        </div>
+      </div>
+
+      ${resultHtml}
+
+      <div class="agent-actions">
+        <button class="btn btn-purple btn-lg" onclick="openValueModal('set_agent_initial','${state.user.agencyId}','${shift}',${JSON.stringify(agentInit)})">
+          💼 ${agentInit !== null && agentInit !== undefined ? 'Atualizar Inicial' : 'Inserir Saldo Inicial'}
+        </button>
+        <button class="btn btn-success btn-lg" onclick="openValueModal('close_agent','${state.user.agencyId}','${shift}',${JSON.stringify(agentClose)})">
+          💵 ${agentClose !== null && agentClose !== undefined ? 'Atualizar Fecho' : 'Inserir Saldo de Fecho'}
+        </button>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-outline" style="flex:1;" onclick="openMovementModal('${state.user.agencyId}','${shift}','first',${JSON.stringify(record?.first_movement_type||null)})">
+            ⬆️ 1º Movimento ${record?.first_movement_type ? '✓' : ''}
+          </button>
+          <button class="btn btn-outline" style="flex:1;" onclick="openMovementModal('${state.user.agencyId}','${shift}','last',${JSON.stringify(record?.last_movement_type||null)})">
+            ⬇️ Últ. Movimento ${record?.last_movement_type ? '✓' : ''}
+          </button>
+        </div>
+        <button class="btn btn-outline btn-lg" onclick="loadAgentView()">🔄 Atualizar</button>
+      </div>
+    </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// VALUE MODAL
+// ═══════════════════════════════════════════════════════════════
+const modeConfig = {
+  set_manager_initial: { title: '🏦 Saldo Inicial da Gerência', sub: 'Defina o saldo inicial para este turno', hint: 'Este valor é definido pela Gerência no início do turno' },
+  set_agent_initial: { title: '💼 Saldo Inicial do Agente', sub: 'Insira o valor que traz para o turno (pode ser 0)', hint: 'Valor que o agente traz no início do seu turno' },
+  close_agent: { title: '💵 Saldo Físico de Fecho', sub: 'Dinheiro físico em mão no fecho do turno', hint: 'Contagem física do dinheiro no final do turno' },
+  confirm_bank: { title: '🏧 Saldo Bancário', sub: 'Valor registado na conta bancária', hint: 'Consulte a aplicação do banco e insira o saldo atual' },
+};
+
+function openValueModal(mode, agencyId, shift, currentValue) {
+  modalCtx = { mode, agencyId, shift };
+  const cfg = modeConfig[mode] || { title: 'Inserir Valor', sub: '', hint: '' };
+  document.getElementById('modal-value-title').textContent = cfg.title;
+  document.getElementById('modal-value-sub').textContent = cfg.sub;
+  document.getElementById('modal-value-hint').textContent = cfg.hint;
+  document.getElementById('modal-value-input').value = currentValue !== null && currentValue !== undefined ? currentValue : '';
+  document.getElementById('modal-notes-input').value = '';
+  document.getElementById('modal-notes-group').style.display = (mode === 'close_agent') ? 'block' : 'none';
+  document.getElementById('modal-left-group').style.display = (mode === 'close_agent') ? 'block' : 'none';
+  document.getElementById('modal-left-input').value = '';
+  document.getElementById('modal-value').classList.remove('hidden');
+  setTimeout(() => document.getElementById('modal-value-input').focus(), 100);
+}
+
+function closeValueModal() {
+  document.getElementById('modal-value').classList.add('hidden');
+}
+
+async function submitValueModal() {
+  const val = parseFloat(document.getElementById('modal-value-input').value.replace(',', '.'));
+  if (isNaN(val) || val < 0) { showToast('⚠️ Insira um valor válido (≥ 0)'); return; }
+  const notes = document.getElementById('modal-notes-input').value.trim();
+  const leftRaw = document.getElementById('modal-left-input').value;
+  const leftVal = (leftRaw !== '' && !isNaN(parseFloat(leftRaw))) ? parseFloat(leftRaw) : null;
+  const { mode, agencyId, shift } = modalCtx;
+  const date = getTodayDate();
+  try {
+    const endpointMap = {
+      set_manager_initial: ['/api/records/set-initial', { agencyId, date, shift, initialBalance: val }],
+      set_agent_initial: ['/api/records/set-agent-initial', { agencyId, date, shift, agentInitialBalance: val }],
+      close_agent: ['/api/records/close-agent', { agencyId, date, shift, agentClosingBalance: val, leftInAgency: leftVal, notes }],
+      confirm_bank: ['/api/records/confirm-bank', { agencyId, date, shift, bankBalance: val }],
+    };
+    const [endpoint, body] = endpointMap[mode];
+    await api('POST', endpoint, body);
+    closeValueModal();
+    showToast('✅ Guardado com sucesso!');
+    if (state.user.role === 'management') await loadManagementDashboard();
+    else await loadAgentView();
+  } catch(e) {
+    showToast('❌ ' + (e.message || 'Erro ao guardar'));
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// MOVEMENT MODAL
+// ═══════════════════════════════════════════════════════════════
+function openMovementModal(agencyId, shift, which, currentType) {
+  modalCtx = { agencyId, shift, which };
+  document.getElementById('modal-movement-title').textContent = which === 'first' ? '⬆️ Primeiro Movimento' : '⬇️ Último Movimento';
+  document.getElementById('modal-movement-type').value = currentType || 'deposit';
+  document.getElementById('modal-movement-amount').value = '';
+  document.getElementById('modal-movement-notes').value = '';
+  document.getElementById('modal-movement').classList.remove('hidden');
+}
+
+function closeMovementModal() {
+  document.getElementById('modal-movement').classList.add('hidden');
+}
+
+async function submitMovementModal() {
+  const { agencyId, shift, which } = modalCtx;
+  const type = document.getElementById('modal-movement-type').value;
+  const amount = parseFloat(document.getElementById('modal-movement-amount').value) || null;
+  const notes = document.getElementById('modal-movement-notes').value.trim();
+  try {
+    await api('POST', '/api/records/movement', { agencyId, date: getTodayDate(), shift, which, type, amount, notes });
+    closeMovementModal();
+    showToast('✅ Movimento registado!');
+    if (state.user.role === 'management') await loadManagementDashboard();
+    else await loadAgentView();
+  } catch(e) {
+    showToast('❌ ' + (e.message || 'Erro'));
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SUMMARY MODAL
+// ═══════════════════════════════════════════════════════════════
+let summaryText = '';
+
+async function openSummaryModal() {
+  document.getElementById('modal-summary').classList.remove('hidden');
+  document.getElementById('summary-date-label').textContent = formatDate(getTodayDate());
+  document.getElementById('summary-content').innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+  try {
+    const data = await api('GET', '/api/records/summary/' + getTodayDate());
+    renderSummary(data);
+  } catch(e) {
+    document.getElementById('summary-content').innerHTML = '<p style="color:var(--danger)">Erro ao carregar resumo</p>';
+  }
+}
+
+function closeSummaryModal() {
+  document.getElementById('modal-summary').classList.add('hidden');
+}
+
+function renderSummary(data) {
+  const lines = [];
+  lines.push(`📊 *RESUMO PAZMAR — ${formatDate(data.date).toUpperCase()}*\n`);
+
+  const zoneIcons = { 'Lobito': '🏙️', 'Benguela': '🌊' };
+  const zoneColors = { 'Lobito': '#1A56DB', 'Benguela': '#7C3AED' };
+  const zoneBgs = { 'Lobito': '#EFF6FF', 'Benguela': '#F5F3FF' };
+
+  // Usar zones do servidor se disponível, senão agrupar manualmente
+  const zonesData = data.zones || (() => {
+    const z = {};
+    for (const item of data.summary) {
+      const zone = item.agency.location || 'Sem Zona';
+      if (!z[zone]) z[zone] = [];
+      z[zone].push(item);
+    }
+    return z;
+  })();
+
+  let html = '';
+  for (const [zoneName, zoneItems] of Object.entries(zonesData)) {
+    const icon = zoneIcons[zoneName] || '📍';
+    const color = zoneColors[zoneName] || '#6B7280';
+    const bg = zoneBgs[zoneName] || '#F9FAFB';
+    lines.push(`\n${icon} *${zoneName.toUpperCase()}*`);
+    html += `<div style="background:${bg};border-left:3px solid ${color};border-radius:8px 8px 0 0;padding:8px 12px;margin-top:12px;margin-bottom:2px;">
+      <span style="font-weight:700;font-size:13px;color:${color};">${icon} ${zoneName}</span>
+    </div>`;
+
+    for (const item of zoneItems) {
+      const { agency, morning, afternoon } = item;
+      lines.push(`\n  🏢 *${agency.name}*`);
+      html += `<div style="margin-bottom:2px;padding:8px 12px;background:#fff;border-left:3px solid ${color};"><div style="font-weight:700;font-size:14px;margin-bottom:6px;">${agency.name}</div>`;
+
+      for (const [shift, record, label] of [['morning', morning, '🌅 Manhã'], ['afternoon', afternoon, '🌆 Tarde']]) {
+        if (!record) {
+          lines.push(`    ${label}: Sem registo`);
+          html += `<div style="font-size:13px;color:var(--muted);margin-bottom:4px;">${label}: Sem registo</div>`;
+          continue;
+        }
+        const diff = record.difference;
+        const status = record.status;
+        const statusEmoji = { ok:'✅', warning:'⚠️', medium:'🟠', alert:'🔴', pending:'⏳' }[status] || '⏳';
+        const diffStr = diff !== null && diff !== undefined ? (diff >= 0 ? '+' : '') + fmtCurrency(diff) : 'Pendente';
+        lines.push(`    ${label}: ${statusEmoji} Dif: ${diffStr}`);
+        if (record.initial_balance !== null) lines.push(`      Inicial: ${fmtCurrency((record.initial_balance||0)+(record.agent_initial_balance||0))} | Físico: ${fmtCurrency(record.agent_closing_balance)} | Banco: ${fmtCurrency(record.bank_balance)}`);
+        const bgMap = { ok:'#DCFCE7', warning:'#FEF9C3', medium:'#FFEDD5', alert:'#FEE2E2', pending:'#F3F4F6' };
+        const colMap = { ok:'#15803D', warning:'#A16207', medium:'#C2410C', alert:'#B91C1C', pending:'#6B7280' };
+        html += `<div style="background:${bgMap[status]||'#F3F4F6'};border-radius:8px;padding:8px 10px;margin-bottom:4px;display:flex;justify-content:space-between;align-items:center;">
+          <div style="font-size:13px;font-weight:600;color:${colMap[status]||'#6B7280'}">${label} ${statusEmoji}</div>
+          <div style="font-size:14px;font-weight:700;color:${colMap[status]||'#6B7280'}">${diffStr}</div>
+        </div>`;
+      }
+      html += '</div>';
+    }
+    html += `<div style="height:3px;background:${color};border-radius:0 0 6px 6px;opacity:0.3;margin-bottom:8px;"></div>`;
+  }
+
+  summaryText = lines.join('\n');
+  document.getElementById('summary-content').innerHTML = html;
+}
+
+function shareSummary() {
+  const encoded = encodeURIComponent(summaryText);
+  window.open('https://wa.me/?text=' + encoded, '_blank');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SETTINGS
+// ═══════════════════════════════════════════════════════════════
+async function loadSettingsData() {
+  try {
+    const [users, agencies] = await Promise.all([
+      api('GET', '/api/users/all'),
+      api('GET', '/api/agencies'),
+    ]);
+    state.users = users;
+    state.agencies = agencies;
+    renderSettingsUsers(users);
+    renderSettingsAgencies(agencies);
+    await loadSettingsValidations();
+  } catch(e) {}
+}
+
+function renderSettingsUsers(users) {
+  const el = document.getElementById('settings-users-list');
+  el.innerHTML = users.map(u => {
+    let sub = '';
+    if (u.role === 'management') sub = '🔑 Gerência';
+    else if (u.role === 'zone_manager') sub = `📍 Gestor de Zona · ${u.zone || ''}`;
+    else sub = u.shift === 'morning' ? '🌅 Manhã' : '🌆 Tarde';
+    return `
+    <div class="settings-item" style="display:flex;align-items:center;justify-content:space-between;">
+      <div style="flex:1;min-width:0;">
+        <div class="settings-item-label">${u.name}</div>
+        <div class="settings-item-sub">${sub} · ID: <code style="font-size:10px;background:rgba(255,255,255,0.06);padding:1px 4px;border-radius:3px;">${u.id}</code></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+        <button class="btn btn-outline btn-sm" style="font-size:11px;padding:4px 8px;" onclick="openRenameModal('user','${u.id}','${u.name.replace(/'/g,"\'")}')">✏️ Renomear</button>
+        <button class="btn btn-outline btn-sm" style="font-size:11px;padding:4px 8px;" onclick="openChangePinModal('${u.id}')">🔑 PIN</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderSettingsAgencies(agencies) {
+  const el = document.getElementById('settings-agencies-list');
+  const byZone = {};
+  for (const a of agencies) {
+    const z = a.location || 'Sem Zona';
+    if (!byZone[z]) byZone[z] = [];
+    byZone[z].push(a);
+  }
+  const zoneIcons = { 'Lobito': '🏙️', 'Benguela': '🌊' };
+  let html = '';
+  for (const [zone, list] of Object.entries(byZone)) {
+    html += `<div style="font-size:11px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:0.05em;padding:8px 0 4px;">${zoneIcons[zone] || '📍'} ${zone}</div>`;
+    html += list.map(a => `
+    <div class="settings-item" style="display:flex;align-items:center;justify-content:space-between;">
+      <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;">
+        <div style="width:36px;height:36px;border-radius:9px;background:${a.color};display:flex;align-items:center;justify-content:center;color:white;font-weight:800;font-size:13px;flex-shrink:0;">${a.code}</div>
+        <div style="min-width:0;">
+          <div class="settings-item-label">${a.name}</div>
+          <div class="settings-item-sub">Código: ${a.code} · ${zoneIcons[a.location] || '📍'} ${a.location || 'Sem Zona'}</div>
+        </div>
+      </div>
+      <button class="btn btn-outline btn-sm" style="font-size:11px;padding:4px 8px;flex-shrink:0;margin-left:8px;" onclick="openRenameModal('agency','${a.id}','${a.name.replace(/'/g,"\'")}')">✏️ Renomear</button>
+    </div>`).join('');
+  }
+  el.innerHTML = html;
+}
+
+// ─── PIN Change ───────────────────────────────────────────────
+let pinChangeTargetId = null;
+
+function openChangePinModal(userId) {
+  pinChangeTargetId = userId;
+  const user = state.users.find(u => u.id === userId);
+  document.getElementById('modal-pin-sub').textContent = user ? `Alterar PIN de: ${user.name}` : 'Alterar o meu PIN';
+  document.getElementById('modal-pin-input').value = '';
+  document.getElementById('modal-pin-confirm').value = '';
+  document.getElementById('modal-pin').classList.remove('hidden');
+}
+
+function closePinModal() {
+  document.getElementById('modal-pin').classList.add('hidden');
+}
+
+async function submitPinChange() {
+  const pin = document.getElementById('modal-pin-input').value;
+  const confirm = document.getElementById('modal-pin-confirm').value;
+  if (pin.length !== 4 || !/^\d{4}$/.test(pin)) { showToast('⚠️ PIN deve ter 4 dígitos numéricos'); return; }
+  if (pin !== confirm) { showToast('⚠️ Os PINs não coincidem'); return; }
+  try {
+    await api('POST', '/api/auth/change-pin', { targetUserId: pinChangeTargetId, newPin: pin });
+    closePinModal();
+    showToast('✅ PIN alterado com sucesso!');
+  } catch(e) {
+    showToast('❌ ' + (e.message || 'Erro'));
+  }
+}
+
+// ─── Add Agency ───────────────────────────────────────────────
+function openAddAgencyModal() {
+  document.getElementById('modal-agency-name').value = '';
+  document.getElementById('modal-agency-code').value = '';
+  document.getElementById('modal-agency').classList.remove('hidden');
+}
+
+function closeAgencyModal() {
+  document.getElementById('modal-agency').classList.add('hidden');
+}
+
+async function submitAddAgency() {
+  const name = document.getElementById('modal-agency-name').value.trim();
+  const code = document.getElementById('modal-agency-code').value.trim().toUpperCase();
+  const location = document.getElementById('modal-agency-location').value;
+  if (!name || !code) { showToast('⚠️ Nome e código são obrigatórios'); return; }
+  try {
+    await api('POST', '/api/agencies', { name, code, location });
+    closeAgencyModal();
+    showToast('✅ Agência adicionada!');
+    await loadSettingsData();
+    await loadManagementDashboard();
+  } catch(e) {
+    showToast('❌ ' + (e.message || 'Erro'));
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// TAB SWITCHING
+// ═══════════════════════════════════════════════════════════════
+function switchMgmtTab(tab) {
+  state.currentMgmtTab = tab;
+  document.getElementById('mgmt-tab-dashboard').classList.toggle('hidden', tab !== 'dashboard');
+  document.getElementById('mgmt-tab-accounts').classList.toggle('hidden', tab !== 'accounts');
+  document.getElementById('mgmt-tab-deposits').classList.toggle('hidden', tab !== 'deposits');
+  document.getElementById('mgmt-tab-gato').classList.toggle('hidden', tab !== 'gato');
+  document.getElementById('mgmt-tab-settings').classList.toggle('hidden', tab !== 'settings');
+  document.getElementById('tab-mgmt-dashboard').classList.toggle('active', tab === 'dashboard');
+  document.getElementById('tab-mgmt-accounts').classList.toggle('active', tab === 'accounts');
+  document.getElementById('tab-mgmt-deposits').classList.toggle('active', tab === 'deposits');
+  document.getElementById('tab-mgmt-gato').classList.toggle('active', tab === 'gato');
+  document.getElementById('tab-mgmt-settings').classList.toggle('active', tab === 'settings');
+  if (tab === 'gato') loadGatoTab();
+  if (tab === 'deposits') loadDepositsTab();
+  if (tab === 'accounts') loadAccountsTab();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ABA DEPÓSITOS
+// ═══════════════════════════════════════════════════════════════
+let depositsDate = getTodayDate();
+
+function depositsUpdateDateNav() {
+  const today = getTodayDate();
+  document.getElementById('deposits-date-label').textContent = formatDate(depositsDate);
+  const d = new Date(depositsDate + 'T12:00:00');
+  const weekdays = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
+  document.getElementById('deposits-date-sub').textContent = weekdays[d.getDay()];
+  const todayBtn = document.getElementById('deposits-today-btn');
+  if (depositsDate !== today) { todayBtn.style.display = 'inline-block'; } else { todayBtn.style.display = 'none'; }
+}
+
+function depositsNavigateDate(delta) {
+  const d = new Date(depositsDate + 'T12:00:00');
+  d.setDate(d.getDate() + delta);
+  const newDate = d.toISOString().split('T')[0];
+  const today = getTodayDate();
+  if (newDate > today) return; // não navegar para o futuro
+  depositsDate = newDate;
+  depositsUpdateDateNav();
+  loadDepositsTab();
+}
+
+function depositsGoToToday() {
+  depositsDate = getTodayDate();
+  depositsUpdateDateNav();
+  loadDepositsTab();
+}
+
+async function loadDepositsTab() {
+  depositsUpdateDateNav();
+  const el = document.getElementById('deposits-content');
+  el.innerHTML = '<div class="loading"><div class="spinner"></div> A carregar...</div>';
+  try {
+    const data = await api('GET', '/api/records/deposits/' + depositsDate);
+    renderDepositsTab(data);
+  } catch(e) {
+    el.innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-text">Erro ao carregar depósitos</div></div>';
+  }
+}
+
+function renderDepositsTab(data) {
+  const el = document.getElementById('deposits-content');
+  const { agencies, grandTotal, date, depositInfo } = data;
+
+  const weekdays = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
+  const d = new Date(date + 'T12:00:00');
+  const dowLabel = weekdays[d.getDay()];
+
+  // Calcular info de depósito para o cabeçalho
+  let depositBannerHtml = '';
+  if (depositInfo) {
+    if (depositInfo.sameDay) {
+      depositBannerHtml = `<div style="font-size:11px;color:var(--muted);margin-top:6px;">🏦 Depósito previsto: <strong style="color:var(--primary);">${depositInfo.morningDepositLabel || 'Dia seguinte'}</strong> (${depositInfo.morningDepositDate ? formatDate(depositInfo.morningDepositDate) : '—'})</div>`;
+    } else {
+      depositBannerHtml = `<div style="font-size:11px;color:var(--muted);margin-top:6px;">
+        🌅 Manhã → <strong style="color:var(--primary);">${depositInfo.morningDepositLabel}</strong> (${formatDate(depositInfo.morningDepositDate)})<br>
+        🌆 Tarde → <strong style="color:#A78BFA;">${depositInfo.afternoonDepositLabel}</strong> (${formatDate(depositInfo.afternoonDepositDate)})
+      </div>`;
+    }
+  }
+
+  let html = '';
+
+  // Cabeçalho com total geral
+  html += `<div style="background:linear-gradient(135deg,rgba(0,212,255,0.12),rgba(0,212,255,0.04));border:1.5px solid rgba(0,212,255,0.3);border-radius:14px;padding:16px 18px;margin-bottom:16px;">
+    <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">💰 Total Físico a Depositar</div>
+    <div style="font-size:28px;font-weight:900;color:var(--primary);">${fmtCurrency(grandTotal)}</div>
+    <div style="font-size:11px;color:var(--muted);margin-top:2px;">${agencies.length} agências · ${formatDate(date)} (${dowLabel})</div>
+    ${depositBannerHtml}
+    <div style="font-size:10px;color:var(--muted);margin-top:6px;font-style:italic;">⚠️ Este valor será depositado conforme o calendário bancário acima</div>
+    <button onclick="shareDepositsReport()" style="margin-top:10px;background:rgba(37,211,102,0.15);border:1px solid rgba(37,211,102,0.35);border-radius:8px;padding:7px 14px;color:#25D366;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;">
+      📲 Partilhar via WhatsApp
+    </button>
+  </div>`;
+
+  // Agrupar por zona
+  const zones = {};
+  for (const item of agencies) {
+    const zone = item.agency.location || 'Sem Zona';
+    if (!zones[zone]) zones[zone] = [];
+    zones[zone].push(item);
+  }
+
+  const zoneIcons = { 'Lobito': '🏙️', 'Benguela': '🌊' };
+  const zoneColors = { 'Lobito': '#00D4FF', 'Benguela': '#A78BFA' };
+
+  for (const [zoneName, items] of Object.entries(zones)) {
+    const icon = zoneIcons[zoneName] || '📍';
+    const color = zoneColors[zoneName] || '#6B7280';
+    const zoneTotal = items.reduce((s, i) => s + (i.total ?? 0), 0);
+
+    html += `<div style="margin-bottom:4px;padding:8px 4px 4px;">
+      <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1.2px;color:${color};display:flex;align-items:center;justify-content:space-between;">
+        <span>${icon} ${zoneName}</span>
+        <span style="font-size:13px;font-weight:700;color:${color};">${fmtCurrency(zoneTotal)}</span>
+      </div>
+    </div>`;
+
+    html += `<div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:14px;">`;
+
+    for (const item of items) {
+      const { agency, morningPhysical, afternoonPhysical, total,
+              morningAgentName, afternoonAgentName, morningStatus, afternoonStatus,
+              morningDepositLabel, afternoonDepositLabel, morningDepositDate, afternoonDepositDate,
+              morningConfirmation, afternoonConfirmation } = item;
+
+      const mStatusColor = { ok:'#4ADE80', warning:'#FFB300', medium:'#FF6D00', alert:'#FF1744', pending:'#6B7280' }[morningStatus] || '#6B7280';
+      const aStatusColor = { ok:'#4ADE80', warning:'#FFB300', medium:'#FF6D00', alert:'#FF1744', pending:'#6B7280' }[afternoonStatus] || '#6B7280';
+
+      // Renderizar célula de valor + confirmação
+      function renderShiftCell(physical, agentName, statusColor, depositLabel, depositDate, conf, sourceShift) {
+        if (physical === null) return `<div style="text-align:right;"><span style="color:var(--muted);font-size:11px;">Pend.</span></div>`;
+        let confHtml = '';
+        if (conf) {
+          const diff = conf.difference;
+          const diffColor = diff === 0 ? 'var(--success)' : (diff > 0 ? 'var(--warning)' : 'var(--error)');
+          const diffLabel = diff === 0 ? '✅ OK' : (diff > 0 ? `+${fmtCurrency(diff)}` : `-${fmtCurrency(Math.abs(diff))}`);
+          confHtml = `<div style="font-size:9px;color:${diffColor};margin-top:2px;font-weight:700;">${diffLabel}</div>`;
+        } else if (depositDate) {
+          confHtml = `<div style="font-size:9px;color:var(--muted);margin-top:2px;">Dep: ${depositLabel}</div>`;
+        }
+        const hasPhysical = physical !== null;
+        const btnHtml = hasPhysical ? `<button onclick="openDepositConfirmModal('${agency.id}','${sourceShift}','${date}',${physical})" style="margin-top:3px;font-size:9px;padding:2px 6px;border-radius:5px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;">${conf ? '✏️' : '✔️'}</button>` : '';
+        return `<div style="text-align:right;">
+          <div style="font-size:12px;font-weight:700;color:${statusColor};">${fmtCurrency(physical)}</div>
+          ${agentName ? `<div style="font-size:9px;color:var(--muted);">${agentName.split(' ')[0]}</div>` : ''}
+          ${confHtml}
+          ${btnHtml}
+        </div>`;
+      }
+
+      const totalVal = total !== null ? `<span style="color:var(--primary);font-weight:800;">${fmtCurrency(total)}</span>` : '<span style="color:var(--muted);font-size:11px;">Pend.</span>';
+
+      html += `<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:0;padding:10px 12px;border-bottom:1px solid rgba(255,255,255,0.04);align-items:start;">
+        <div>
+          <div style="display:flex;align-items:center;gap:7px;">
+            <div style="width:28px;height:28px;border-radius:7px;background:${agency.color};display:flex;align-items:center;justify-content:center;font-weight:800;font-size:11px;color:#fff;flex-shrink:0;">${agency.code}</div>
+            <div style="font-size:12px;font-weight:700;">${agency.name}</div>
+          </div>
+        </div>
+        ${renderShiftCell(morningPhysical, morningAgentName, mStatusColor, morningDepositLabel, morningDepositDate, morningConfirmation, 'morning')}
+        ${renderShiftCell(afternoonPhysical, afternoonAgentName, aStatusColor, afternoonDepositLabel, afternoonDepositDate, afternoonConfirmation, 'afternoon')}
+        <div style="text-align:right;">${totalVal}</div>
+      </div>`;
+    }
+
+    // Subtotal da zona
+    html += `<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:0;padding:10px 12px;background:rgba(255,255,255,0.04);">
+      <div style="font-size:11px;font-weight:700;color:var(--muted);grid-column:1/4;">Subtotal ${zoneName}</div>
+      <div style="text-align:right;font-size:13px;font-weight:800;color:${color};">${fmtCurrency(zoneTotal)}</div>
+    </div>`;
+
+    html += `</div>`;
+  }
+
+  // Rodapé com total geral
+  html += `<div style="background:linear-gradient(135deg,rgba(0,212,255,0.1),rgba(124,58,237,0.08));border:1.5px solid rgba(0,212,255,0.25);border-radius:14px;padding:14px 16px;margin-top:4px;display:flex;align-items:center;justify-content:space-between;">
+    <div style="font-size:13px;font-weight:700;color:var(--muted);">Total Físico a Depositar</div>
+    <div style="font-size:20px;font-weight:900;color:var(--primary);">${fmtCurrency(grandTotal)}</div>
+  </div>`;
+
+  el.innerHTML = html;
+  window._depositsData = data;
+}
+
+// Modal de confirmação de depósito
+let depositConfCtx = {};
+function openDepositConfirmModal(agencyId, shift, date, expectedAmount) {
+  depositConfCtx = { agencyId, shift, date, expectedAmount };
+  const shiftLabel = shift === 'morning' ? 'Manhã' : 'Tarde';
+  document.getElementById('dep-confirm-title').textContent = `🏦 Confirmar Depósito — ${shiftLabel}`;
+  document.getElementById('dep-confirm-expected').textContent = fmtCurrency(expectedAmount);
+  document.getElementById('dep-confirm-amount-input').value = '';
+  document.getElementById('dep-confirm-notes-input').value = '';
+  document.getElementById('dep-confirm-diff-box').style.display = 'none';
+  document.getElementById('modal-deposit-confirm').classList.remove('hidden');
+  setTimeout(() => document.getElementById('dep-confirm-amount-input').focus(), 100);
+}
+
+function closeDepositConfirmModal() {
+  document.getElementById('modal-deposit-confirm').classList.add('hidden');
+}
+
+function updateDepositDiffPreview() {
+  const expected = depositConfCtx.expectedAmount || 0;
+  const inputVal = document.getElementById('dep-confirm-amount-input').value;
+  const diffBox = document.getElementById('dep-confirm-diff-box');
+  const diffValue = document.getElementById('dep-confirm-diff-value');
+  const diffLabel = document.getElementById('dep-confirm-diff-label');
+
+  if (inputVal === '') { diffBox.style.display = 'none'; return; }
+  const confirmed = parseFloat(inputVal) || 0;
+  const diff = confirmed - expected;
+  diffBox.style.display = 'block';
+
+  if (diff === 0) {
+    diffBox.style.background = 'rgba(34,197,94,0.15)';
+    diffBox.style.border = '1px solid rgba(34,197,94,0.3)';
+    diffLabel.textContent = 'Resultado'; diffLabel.style.color = 'var(--success)';
+    diffValue.textContent = '✅ Valor correcto'; diffValue.style.color = 'var(--success)';
+  } else if (diff > 0) {
+    diffBox.style.background = 'rgba(245,158,11,0.15)';
+    diffBox.style.border = '1px solid rgba(245,158,11,0.3)';
+    diffLabel.textContent = 'Sobra'; diffLabel.style.color = 'var(--warning)';
+    diffValue.textContent = `+${fmtCurrency(diff)}`; diffValue.style.color = 'var(--warning)';
+  } else {
+    diffBox.style.background = 'rgba(239,68,68,0.15)';
+    diffBox.style.border = '1px solid rgba(239,68,68,0.3)';
+    diffLabel.textContent = '⚠️ Falta'; diffLabel.style.color = 'var(--error)';
+    diffValue.textContent = `-${fmtCurrency(Math.abs(diff))}`; diffValue.style.color = 'var(--error)';
+  }
+}
+
+async function submitDepositConfirm() {
+  const confirmed = parseFloat(document.getElementById('dep-confirm-amount-input').value);
+  if (isNaN(confirmed) || confirmed < 0) { showToast('⚠️ Insira o valor depositado'); return; }
+  const notes = document.getElementById('dep-confirm-notes-input').value.trim();
+  const { agencyId, shift, date } = depositConfCtx;
+  try {
+    await api('POST', '/api/records/deposits/confirm', { sourceDate: date, sourceShift: shift, agencyId, confirmedAmount: confirmed, notes });
+    closeDepositConfirmModal();
+    showToast('✅ Depósito confirmado!');
+    await loadDepositsTab();
+  } catch(e) {
+    showToast('❌ ' + (e.message || 'Erro ao confirmar depósito'));
+  }
+}
+
+function shareDepositsReport() {
+  const data = window._depositsData;
+  if (!data) return;
+  const { agencies, grandTotal, date } = data;
+
+  const lines = [];
+  lines.push(`🏦 *DEPÓSITOS PAZMAR — ${formatDate(date).toUpperCase()}*\n`);
+
+  const zones = {};
+  for (const item of agencies) {
+    const zone = item.agency.location || 'Sem Zona';
+    if (!zones[zone]) zones[zone] = [];
+    zones[zone].push(item);
+  }
+
+  for (const [zoneName, items] of Object.entries(zones)) {
+    const zoneTotal = items.reduce((s, i) => s + (i.total ?? 0), 0);
+    lines.push(`\n📍 *${zoneName.toUpperCase()}*`);
+    for (const item of items) {
+      const m = item.morningPhysical !== null ? fmtCurrency(item.morningPhysical) : 'Pend.';
+      const a = item.afternoonPhysical !== null ? fmtCurrency(item.afternoonPhysical) : 'Pend.';
+      const t = item.total !== null ? fmtCurrency(item.total) : 'Pend.';
+      lines.push(`  ${item.agency.name}: Manhã ${m} | Tarde ${a} | *Total ${t}*`);
+    }
+    lines.push(`  Subtotal ${zoneName}: *${fmtCurrency(zoneTotal)}*`);
+  }
+
+  lines.push(`\n💰 *TOTAL GERAL: ${fmtCurrency(grandTotal)}*`);
+  lines.push(`\n_Gerado pelo Pazmar Balance_`);
+
+  const text = lines.join('\n');
+  window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ABA CONTAS
+// ═══════════════════════════════════════════════════════════════
+let accountsDate = getTodayDate();
+
+function accountsNavigateDate(delta) {
+  const d = new Date(accountsDate + 'T12:00:00');
+  d.setDate(d.getDate() + delta);
+  const today = getTodayDate();
+  const newDate = d.toISOString().slice(0, 10);
+  if (newDate > today) return;
+  accountsDate = newDate;
+  updateAccountsDateNav();
+  loadAccountsTab();
+}
+
+function accountsGoToToday() {
+  accountsDate = getTodayDate();
+  updateAccountsDateNav();
+  loadAccountsTab();
+}
+
+function updateAccountsDateNav() {
+  const today = getTodayDate();
+  const isToday = accountsDate === today;
+  const label = document.getElementById('accounts-date-label');
+  const sub = document.getElementById('accounts-date-sub');
+  const todayBtn = document.getElementById('accounts-today-btn');
+  if (label) label.textContent = formatDate(accountsDate);
+  if (sub) sub.textContent = isToday ? 'Hoje' : '';
+  if (todayBtn) todayBtn.style.display = isToday ? 'none' : 'inline-block';
+}
+
+async function loadAccountsTab() {
+  updateAccountsDateNav();
+  const el = document.getElementById('accounts-content');
+  el.innerHTML = '<div class="loading"><div class="spinner"></div> A carregar...</div>';
+
+  // Actualizar label da zona
+  const zoneLabel = document.getElementById('accounts-zone-label');
+  if (state.user && state.user.role === 'accountant') {
+    if (zoneLabel) zoneLabel.textContent = `Zona: ${state.user.zone || 'Todas'}`;
+  } else {
+    if (zoneLabel) zoneLabel.textContent = 'Validação de valores físicos por contabilista';
+  }
+
+  try {
+    const data = await api('GET', `/api/accounts/${accountsDate}`);
+    renderAccountsTab(data);
+  } catch(e) {
+    el.innerHTML = `<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-text">Erro ao carregar: ${e.message}</div></div>`;
+  }
+}
+
+function renderAccountsTab(data) {
+  const el = document.getElementById('accounts-content');
+  if (!data.agencies || data.agencies.length === 0) {
+    el.innerHTML = '<div class="empty"><div class="empty-icon">📊</div><div class="empty-text">Sem dados para este dia</div></div>';
+    return;
+  }
+
+  const isAccountant = state.user && state.user.role === 'accountant';
+  const canValidate = ['management', 'accountant'].includes(state.user?.role);
+
+  let html = '';
+  for (const ag of data.agencies) {
+    const shifts = [
+      { key: 'morning', label: 'Manhã', record: ag.morning, agent: ag.morningAgent, validation: ag.morningValidation },
+      { key: 'afternoon', label: 'Tarde', record: ag.afternoon, agent: ag.afternoonAgent, validation: ag.afternoonValidation },
+    ];
+
+    html += `<div style="background:var(--surface);border-radius:14px;padding:14px;margin-bottom:14px;border:1px solid var(--border);">`;
+    html += `<div style="font-weight:800;font-size:15px;color:var(--text);margin-bottom:10px;display:flex;align-items:center;gap:8px;">`;
+    html += `<span style="width:10px;height:10px;border-radius:50%;background:${ag.agency.color || '#888'};display:inline-block;"></span>`;
+    html += `${ag.agency.name} <span style="font-size:11px;color:var(--muted);font-weight:400;">${ag.agency.location}</span></div>`;
+
+    for (const s of shifts) {
+      const physical = s.record?.agent_closing_balance;
+      const leftInAgency = s.record?.left_in_agency;
+      const toDeposit = s.record?.to_deposit;
+      const val = s.validation;
+      const hasPhysical = physical !== null && physical !== undefined;
+      const isValidated = !!val;
+      const gatoMoney = val?.gato_money ?? null;
+      const gatoColor = gatoMoney === null ? '' : (gatoMoney === 0 ? 'var(--success)' : (gatoMoney > 0 ? 'var(--warning)' : 'var(--error)'));
+      const gatoLabel = gatoMoney === null ? '' : (gatoMoney === 0 ? '✅ Correcto' : (gatoMoney > 0 ? `⬆️ Sobra: ${fmtCurrency(Math.abs(gatoMoney))}` : `⬇️ Falta: ${fmtCurrency(Math.abs(gatoMoney))} 🐱`));
+
+      html += `<div style="border-top:1px solid var(--border);padding-top:10px;margin-top:8px;">`;
+      html += `<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;">`;
+      html += `<div>`;
+      html += `<div style="font-weight:700;font-size:13px;color:var(--text);">${s.label}</div>`;
+      html += `<div style="font-size:12px;color:var(--muted);">${s.agent?.name || '—'}</div>`;
+      html += `</div>`;
+
+      if (isValidated) {
+        html += `<span style="font-size:11px;background:${gatoColor}22;color:${gatoColor};border-radius:20px;padding:3px 10px;font-weight:700;">${gatoLabel}</span>`;
+      } else if (hasPhysical) {
+        html += `<span style="font-size:11px;background:var(--warning)22;color:var(--warning);border-radius:20px;padding:3px 10px;font-weight:700;">Por validar</span>`;
+      } else {
+        html += `<span style="font-size:11px;background:var(--muted)22;color:var(--muted);border-radius:20px;padding:3px 10px;">Sem dados</span>`;
+      }
+      html += `</div>`;
+
+      // Valores
+      html += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px;">`;
+      html += `<div style="background:var(--surface2);border-radius:8px;padding:8px;">`;
+      html += `<div style="font-size:10px;color:var(--muted);margin-bottom:2px;">Físico Declarado</div>`;
+      html += `<div style="font-weight:700;font-size:14px;color:var(--text);">${hasPhysical ? fmtCurrency(physical) : '—'}</div>`;
+      html += `</div>`;
+      html += `<div style="background:var(--surface2);border-radius:8px;padding:8px;">`;
+      html += `<div style="font-size:10px;color:var(--muted);margin-bottom:2px;">Deixado na Agência</div>`;
+      html += `<div style="font-weight:700;font-size:14px;color:var(--text);">${leftInAgency !== null && leftInAgency !== undefined ? fmtCurrency(leftInAgency) : '—'}</div>`;
+      html += `</div>`;
+      if (isValidated) {
+        html += `<div style="background:var(--surface2);border-radius:8px;padding:8px;">`;
+        html += `<div style="font-size:10px;color:var(--muted);margin-bottom:2px;">Contado pelo Contabilista</div>`;
+        html += `<div style="font-weight:700;font-size:14px;color:${gatoColor || 'var(--text)'};">${fmtCurrency(val.counted_amount)}</div>`;
+        html += `</div>`;
+        if (gatoMoney !== 0 && gatoMoney !== null) {
+          html += `<div style="background:var(--error)11;border-radius:8px;padding:8px;border:1px solid var(--error)44;">`;
+          html += `<div style="font-size:10px;color:${gatoColor};margin-bottom:2px;">📊 Gato Conta</div>`;
+          html += `<div style="font-weight:800;font-size:14px;color:var(--error);">${fmtCurrency(gatoMoney)}</div>`;
+          html += `</div>`;
+        }
+        if (val.notes) {
+          html += `<div style="grid-column:1/-1;font-size:11px;color:var(--muted);font-style:italic;">"${val.notes}"</div>`;
+        }
+      }
+      html += `</div>`; // grid
+
+      // Botões de acção
+      if (canValidate && hasPhysical) {
+        const agId = ag.agency.id;
+        const sh = s.key;
+        const dt = accountsDate;
+        const agName = ag.agency.name || '';
+        if (!isValidated) {
+          html += `<button class="btn btn-primary" style="width:100%;font-size:13px;padding:10px;" onclick="openValidateModal('${agId}','${sh}','${dt}',${physical},'${agName.replace(/'/g,"\\'")}')">✅ Validar Contagem</button>`;
+        } else {
+          html += `<button class="btn btn-outline" style="width:100%;font-size:12px;padding:8px;margin-top:4px;" onclick="openValidateModal('${agId}','${sh}','${dt}',${physical},'${agName.replace(/'/g,"\\'")}')">✏️ Reeditar Validação</button>`;
+        }
+      }
+
+      html += `</div>`; // shift block
+    }
+    html += `</div>`; // agency card
+  }
+
+  el.innerHTML = html;
+}
+
+// Modal de Validação
+let validateCtx = {};
+function openValidateModal(agencyId, shift, date, declaredAmount, agencyName) {
+  validateCtx = { agencyId, shift, date, declaredAmount, agencyName };
+  const shiftLabel = shift === 'morning' ? 'Manhã' : 'Tarde';
+  document.getElementById('validate-modal-title').textContent = `📊 Validar Contagem — ${shiftLabel}`;
+  const agLabel = document.getElementById('validate-modal-agency-label');
+  if (agLabel) agLabel.textContent = agencyName || '';
+  document.getElementById('validate-declared').textContent = declaredAmount !== null && declaredAmount !== undefined ? fmtCurrency(declaredAmount) : '— (não inserido)';
+  document.getElementById('validate-counted-input').value = '';
+  document.getElementById('validate-notes-input').value = '';
+  document.getElementById('validate-gato-preview').textContent = '';
+  const diffBox = document.getElementById('validate-diff-box');
+  if (diffBox) diffBox.style.display = 'none';
+  document.getElementById('modal-validate').classList.remove('hidden');
+  setTimeout(() => document.getElementById('validate-counted-input').focus(), 100);
+}
+
+function closeValidateModal() {
+  document.getElementById('modal-validate').classList.add('hidden');
+}
+
+function updateGatoPreview() {
+  const declared = validateCtx.declaredAmount ?? 0;
+  const inputVal = document.getElementById('validate-counted-input').value;
+  const diffBox = document.getElementById('validate-diff-box');
+  const diffLabel = document.getElementById('validate-diff-label');
+  const diffValue = document.getElementById('validate-diff-value');
+  const gatoPreview = document.getElementById('validate-gato-preview');
+
+  if (inputVal === '') {
+    if (diffBox) diffBox.style.display = 'none';
+    return;
+  }
+
+  const counted = parseFloat(inputVal) || 0;
+  const diff = counted - declared;
+  if (diffBox) diffBox.style.display = 'block';
+
+  if (diff === 0) {
+    diffBox.style.background = 'rgba(34,197,94,0.15)';
+    diffBox.style.border = '1px solid rgba(34,197,94,0.3)';
+    if (diffLabel) { diffLabel.textContent = 'Resultado'; diffLabel.style.color = 'var(--success)'; }
+    if (diffValue) { diffValue.textContent = '✅ Correcto'; diffValue.style.color = 'var(--success)'; }
+    if (gatoPreview) gatoPreview.textContent = 'Sem diferença — não será registado Gato Conta';
+  } else if (diff > 0) {
+    diffBox.style.background = 'rgba(245,158,11,0.15)';
+    diffBox.style.border = '1px solid rgba(245,158,11,0.3)';
+    if (diffLabel) { diffLabel.textContent = 'Diferença (Sobra)'; diffLabel.style.color = 'var(--warning)'; }
+    if (diffValue) { diffValue.textContent = `+${fmtCurrency(diff)}`; diffValue.style.color = 'var(--warning)'; }
+    if (gatoPreview) gatoPreview.innerHTML = `📊 Gato Conta: sobra ${fmtCurrency(diff)} — será registado na aba Gato`;
+  } else {
+    diffBox.style.background = 'rgba(239,68,68,0.15)';
+    diffBox.style.border = '1px solid rgba(239,68,68,0.3)';
+    if (diffLabel) { diffLabel.textContent = 'Diferença (Falta)'; diffLabel.style.color = 'var(--error)'; }
+    if (diffValue) { diffValue.textContent = `-${fmtCurrency(Math.abs(diff))}`; diffValue.style.color = 'var(--error)'; }
+    if (gatoPreview) gatoPreview.innerHTML = `🐱 Gato Conta: falta ${fmtCurrency(Math.abs(diff))} — será registado na aba Gato`;
+  }
+}
+
+async function submitValidateModal() {
+  const counted = parseFloat(document.getElementById('validate-counted-input').value);
+  if (isNaN(counted) || counted < 0) { showToast('⚠️ Insira o valor contado'); return; }
+  const notes = document.getElementById('validate-notes-input').value.trim();
+  const { agencyId, shift, date } = validateCtx;
+  try {
+    await api('POST', '/api/accounts/validate', { agencyId, date, shift, countedAmount: counted, notes });
+    closeValidateModal();
+    showToast('✅ Validação guardada!');
+    await loadAccountsTab();
+  } catch(e) {
+    showToast('❌ ' + (e.message || 'Erro ao validar'));
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ABA GATO
+// ═══════════════════════════════════════════════════════════════
+const gatoState = {
+  filter: 'today',
+  month: new Date().toISOString().slice(0, 7)
+};
+
+function gatoSetFilter(type) {
+  gatoState.filter = type;
+  if (type === 'today') {
+    document.getElementById('gato-filter-today').className = 'btn btn-primary';
+    document.getElementById('gato-filter-month').className = 'btn btn-outline';
+  } else {
+    document.getElementById('gato-filter-today').className = 'btn btn-outline';
+    document.getElementById('gato-filter-month').className = 'btn btn-primary';
+  }
+  if (type === 'custom') {
+    gatoState.month = document.getElementById('gato-filter-month-input').value;
+  }
+  loadGatoTab();
+}
+
+async function loadGatoTab() {
+  const listEl = document.getElementById('gato-list');
+  const summaryEl = document.getElementById('gato-summary-cards');
+  listEl.innerHTML = '<div class="loading"><div class="spinner"></div> A carregar...</div>';
+  summaryEl.innerHTML = '';
+
+  try {
+    const today = new Date().toISOString().slice(0, 10);
+    const month = gatoState.month || today.slice(0, 7);
+
+    if (gatoState.filter === 'today') {
+      // Vista diária
+      const gatos = await api('GET', '/api/gatos?date=' + today);
+      renderGatoDaily(gatos, summaryEl, listEl, today);
+    } else {
+      // Vista mensal
+      const data = await api('GET', '/api/gatos/monthly/' + month);
+      renderGatoMonthly(data, summaryEl, listEl);
+    }
+  } catch(e) {
+    listEl.innerHTML = '<div style="color:var(--error);padding:16px;">❌ Erro ao carregar: ' + (e.message||'') + '</div>';
+  }
+}
+
+function renderGatoDaily(gatos, summaryEl, listEl, date) {
+  const totalAmount = gatos.reduce((s, g) => s + Math.abs(g.difference), 0);
+
+  // Cards de resumo
+  summaryEl.innerHTML = `
+    <div style="min-width:140px;background:var(--surface);border-radius:12px;padding:12px;border:1px solid var(--border);">
+      <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Gatos Hoje</div>
+      <div style="font-size:22px;font-weight:700;color:var(--error);">${gatos.length}</div>
+    </div>
+    <div style="min-width:160px;background:var(--surface);border-radius:12px;padding:12px;border:1px solid var(--border);">
+      <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Total em Falta</div>
+      <div style="font-size:18px;font-weight:700;color:var(--error);">${fmtCurrency(totalAmount)} Kz</div>
+    </div>
+  `;
+
+  if (gatos.length === 0) {
+    listEl.innerHTML = `
+      <div style="text-align:center;padding:40px 20px;">
+        <div style="font-size:40px;margin-bottom:8px;">✅</div>
+        <div style="font-weight:600;color:var(--fg);">Sem gatos hoje!</div>
+        <div style="font-size:13px;color:var(--muted);margin-top:4px;">Todos os saldos estão correctos.</div>
+      </div>`;
+    return;
+  }
+
+  listEl.innerHTML = gatos.map(g => `
+    <div style="background:var(--surface);border-radius:12px;padding:14px;margin-bottom:10px;border-left:4px solid var(--error);border:1px solid var(--border);">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+        <div>
+          <div style="font-weight:700;font-size:14px;color:var(--fg);">${g.agency_code} — ${g.agency_name}</div>
+          <div style="font-size:12px;color:var(--muted);">${g.shift === 'morning' ? '☀️ Manhã' : '🌕 Tarde'} · ${g.agent_name || 'Agente desconhecido'}</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:16px;font-weight:700;color:var(--error);">${fmtCurrency(Math.abs(g.difference))} Kz</div>
+          <div style="font-size:11px;color:var(--muted);">em falta</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;font-size:11px;background:rgba(0,0,0,0.03);border-radius:8px;padding:8px;">
+        <div><div style="color:var(--muted);">Esperado</div><div style="font-weight:600;">${fmtCurrency(g.expected_amount)} Kz</div></div>
+        <div><div style="color:var(--muted);">Real</div><div style="font-weight:600;">${fmtCurrency(g.actual_amount)} Kz</div></div>
+        <div><div style="color:var(--muted);">Diferença</div><div style="font-weight:600;color:var(--error);">${fmtCurrency(g.difference)} Kz</div></div>
+      </div>
+      ${g.note ? `<div style="margin-top:8px;font-size:12px;color:var(--muted);font-style:italic;">📝 ${g.note}</div>` : ''}
+      <div style="margin-top:8px;">
+        <button onclick="gatoAddNote(${g.id}, '${(g.note||'').replace(/'/g,"\\'")}')"
+          style="font-size:11px;background:none;border:1px solid var(--border);border-radius:6px;padding:4px 10px;color:var(--muted);cursor:pointer;">
+          ${g.note ? '✏️ Editar nota' : '+ Adicionar nota'}
+        </button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderGatoMonthly(data, summaryEl, listEl) {
+  const monthLabel = new Date(data.month + '-01').toLocaleDateString('pt-PT', { month: 'long', year: 'numeric' });
+
+  // Cards de resumo
+  summaryEl.innerHTML = `
+    <div style="min-width:140px;background:var(--surface);border-radius:12px;padding:12px;border:1px solid var(--border);">
+      <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Ocorrências</div>
+      <div style="font-size:22px;font-weight:700;color:var(--error);">${data.list.length}</div>
+    </div>
+    <div style="min-width:180px;background:var(--surface);border-radius:12px;padding:12px;border:1px solid var(--border);">
+      <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Total do Mês</div>
+      <div style="font-size:18px;font-weight:700;color:var(--error);">${fmtCurrency(data.totalAmount)} Kz</div>
+    </div>
+  `;
+
+  if (data.list.length === 0) {
+    listEl.innerHTML = `
+      <div style="text-align:center;padding:40px 20px;">
+        <div style="font-size:40px;margin-bottom:8px;">✅</div>
+        <div style="font-weight:600;color:var(--fg);">Sem gatos em ${monthLabel}!</div>
+      </div>`;
+    return;
+  }
+
+  let html = '';
+
+  // Por Agência
+  if (data.byAgency.length > 0) {
+    html += `<div style="font-weight:700;font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">Por Agência</div>`;
+    html += data.byAgency.map(a => `
+      <div style="background:var(--surface);border-radius:12px;padding:12px 14px;margin-bottom:8px;border:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <div style="font-weight:700;font-size:14px;color:var(--fg);">${a.code} — ${a.name}</div>
+          <div style="font-size:12px;color:var(--muted);">${a.location} · ${a.total_occurrences} ocorrência${a.total_occurrences > 1 ? 's' : ''}</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:16px;font-weight:700;color:var(--error);">${fmtCurrency(a.total_amount)} Kz</div>
+          <div style="font-size:11px;color:var(--muted);">em falta</div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // Por Agente
+  if (data.byAgent.length > 0) {
+    html += `<div style="font-weight:700;font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin:16px 0 8px;">Por Agente</div>`;
+    html += data.byAgent.map(a => `
+      <div style="background:var(--surface);border-radius:12px;padding:12px 14px;margin-bottom:8px;border:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <div style="font-weight:700;font-size:14px;color:var(--fg);">${a.name || 'Desconhecido'}</div>
+          <div style="font-size:12px;color:var(--muted);">${a.agency_code} · ${a.shift === 'morning' ? 'Manhã' : 'Tarde'} · ${a.total_occurrences} ocorrência${a.total_occurrences > 1 ? 's' : ''}</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:16px;font-weight:700;color:var(--error);">${fmtCurrency(a.total_amount)} Kz</div>
+          <div style="font-size:11px;color:var(--muted);">em falta</div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // Lista completa do mês agrupada por data
+  const byDate = {};
+  for (const g of data.list) {
+    if (!byDate[g.date]) byDate[g.date] = [];
+    byDate[g.date].push(g);
+  }
+  html += `<div style="font-weight:700;font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin:16px 0 8px;">Detalhe por Dia</div>`;
+  for (const [date, items] of Object.entries(byDate)) {
+    const d = new Date(date + 'T12:00:00');
+    const dateLabel = d.toLocaleDateString('pt-PT', { weekday: 'short', day: 'numeric', month: 'short' });
+    html += `<div style="font-size:12px;color:var(--muted);font-weight:600;margin:10px 0 4px;">${dateLabel}</div>`;
+    html += items.map(g => `
+      <div style="background:var(--surface);border-radius:10px;padding:10px 12px;margin-bottom:6px;border-left:3px solid var(--error);border:1px solid var(--border);">
+        <div style="display:flex;justify-content:space-between;">
+          <div>
+            <span style="font-weight:600;font-size:13px;">${g.agency_code}</span>
+            <span style="font-size:12px;color:var(--muted);"> · ${g.shift === 'morning' ? 'Manhã' : 'Tarde'} · ${g.agent_name || '?'}</span>
+          </div>
+          <div style="font-weight:700;color:var(--error);font-size:13px;">${fmtCurrency(Math.abs(g.difference))} Kz</div>
+        </div>
+        ${g.note ? `<div style="font-size:11px;color:var(--muted);margin-top:4px;font-style:italic;">📝 ${g.note}</div>` : ''}
+      </div>
+    `).join('');
+  }
+
+  listEl.innerHTML = html;
+}
+
+async function gatoAddNote(id, currentNote) {
+  const note = prompt('Adicionar nota ao gato:', currentNote || '');
+  if (note === null) return;
+  try {
+    await api('PATCH', '/api/gatos/' + id + '/note', { note });
+    showToast('📝 Nota guardada');
+    loadGatoTab();
+  } catch(e) {
+    showToast('❌ Erro ao guardar nota');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════
+async function init() {
+  if (state.token && state.user) {
+    try {
+      // Verify token still valid
+      await api('GET', '/api/agencies');
+      if (state.user.role === 'management') await initManagement();
+      else await initAgent();
+    } catch(e) {
+      logout();
+    }
+  } else {
+    await initLogin();
+  }
+}
+
+// Close modals on overlay click
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) {
+      overlay.classList.add('hidden');
+    }
+  });
+});
+
+init();
+
+// ─── WebSocket — Sincronização em Tempo Real ──────────────────────────────
+let wsClient = null;
+let wsReconnectTimer = null;
+
+function connectWebSocket() {
+  if (wsClient && wsClient.readyState === WebSocket.OPEN) return;
+  const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+  const wsUrl = `${proto}//${location.host}`;
+  wsClient = new WebSocket(wsUrl);
+
+  wsClient.onopen = () => {
+    console.log('[WS] Ligado ao servidor em tempo real');
+    if (wsReconnectTimer) { clearTimeout(wsReconnectTimer); wsReconnectTimer = null; }
+  };
+
+  wsClient.onmessage = (event) => {
+    try {
+      const msg = JSON.parse(event.data);
+      if (msg.type === 'record_updated' && state.user) {
+        // Actualizar o dashboard automaticamente quando há novos dados
+        const today = new Date().toISOString().slice(0, 10);
+        const msgDate = msg.payload && msg.payload.date ? msg.payload.date : today;
+        if (msgDate === (state.selectedDate || today)) {
+          if (state.user.role === 'management') {
+            // Recarregar o dashboard silenciosamente
+            loadManagementDashboard().catch(() => {});
+          } else {
+            // Para agentes, recarregar os dados do seu turno
+            loadAgentDashboard && loadAgentDashboard().catch(() => {});
+          }
+        }
+      }
+    } catch(e) {}
+  };
+
+  wsClient.onclose = () => {
+    console.log('[WS] Ligação perdida, a reconectar em 5s...');
+    wsReconnectTimer = setTimeout(connectWebSocket, 5000);
+  };
+
+  wsClient.onerror = () => {
+    wsClient.close();
+  };
+}
+
+// Ligar WebSocket após login
+const _origInitManagement = typeof initManagement !== 'undefined' ? initManagement : null;
+const _origInitAgent = typeof initAgent !== 'undefined' ? initAgent : null;
+
+// Iniciar WebSocket quando o utilizador faz login
+document.addEventListener('pazmar:loggedin', () => connectWebSocket());
+
+// Ligar imediatamente se já estiver autenticado
+if (state.token && state.user) {
+  setTimeout(connectWebSocket, 1000);
+}
+
+// ─── Renomear Agência / Utilizador ────────────────────────────────
+let renameTarget = null;
+
+function openRenameModal(type, id, oldName) {
+  renameTarget = { type, id, oldName };
+  const sub = type === 'agency' ? `Renomear agência: ${oldName}` : `Renomear utilizador: ${oldName}`;
+  document.getElementById('modal-rename-sub').textContent = sub;
+  document.getElementById('modal-rename-input').value = oldName;
+  document.getElementById('modal-rename').classList.remove('hidden');
+  setTimeout(() => document.getElementById('modal-rename-input').focus(), 100);
+}
+
+function closeRenameModal() {
+  document.getElementById('modal-rename').classList.add('hidden');
+  renameTarget = null;
+}
+
+async function submitRename() {
+  if (!renameTarget) return;
+  const newName = document.getElementById('modal-rename-input').value.trim();
+  if (!newName) { showToast('⚠️ Nome não pode estar vazio'); return; }
+  if (newName === renameTarget.oldName) { closeRenameModal(); return; }
+  try {
+    if (renameTarget.type === 'agency') {
+      const agency = state.agencies.find(a => a.id === renameTarget.id);
+      if (!agency) throw new Error('Agência não encontrada');
+      await api('PUT', '/api/agencies/' + renameTarget.id, {
+        name: newName,
+        code: agency.code,
+        color: agency.color,
+        location: agency.location,
+      });
+    } else {
+      await api('PUT', '/api/users/' + renameTarget.id, { name: newName });
+    }
+    closeRenameModal();
+    showToast('✅ Nome actualizado com sucesso!');
+    await loadSettingsData();
+    await loadManagementDashboard();
+  } catch(e) {
+    showToast('❌ ' + (e.message || 'Erro ao renomear'));
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// INSERÇÃO EM MASSA — Saldo Inicial de Todas as Agências
+// ═══════════════════════════════════════════════════════════════
+
+async function openBulkInitialModal() {
+  const modal = document.getElementById('modal-bulk-initial');
+  const form  = document.getElementById('bulk-initial-form');
+  const dateLabel = document.getElementById('bulk-modal-date-label');
+
+  // Data actual do dashboard (pode estar num dia histórico)
+  const date = state.selectedDate || getTodayDate();
+  const dateObj = new Date(date + 'T12:00:00');
+  const dateStr = dateObj.toLocaleDateString('pt-PT', { weekday:'long', day:'2-digit', month:'long', year:'numeric' });
+  dateLabel.textContent = dateStr.charAt(0).toUpperCase() + dateStr.slice(1);
+
+  // Carregar agências e registos existentes
+  let agencies = [];
+  let records  = [];
+  try {
+    [agencies, records] = await Promise.all([
+      api('GET', '/api/agencies'),
+      api('GET', `/api/records?date=${date}`),
+    ]);
+  } catch(e) {
+    alert('Erro ao carregar dados: ' + e.message);
+    return;
+  }
+
+  // Construir formulário
+  const shifts = [
+    { key: 'morning',   label: '🌅 Manhã',  color: '#F59E0B' },
+    { key: 'afternoon', label: '🌆 Tarde',   color: '#8B5CF6' },
+  ];
+
+  form.innerHTML = agencies.map(agency => {
+    const agencyRows = shifts.map(s => {
+      const rec = records.find(r => r.agencyId === agency.id && r.shift === s.key);
+      const existing = rec && rec.initialBalance !== null ? rec.initialBalance : '';
+      const inputId = `bulk-${agency.id}-${s.key}`;
+      const hasValue = existing !== '';
+      return `
+        <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05);">
+          <div style="width:6px;height:32px;border-radius:3px;background:${s.color};flex-shrink:0;"></div>
+          <div style="min-width:70px;font-size:12px;color:${s.color};font-weight:600;">${s.label}</div>
+          <div style="flex:1;position:relative;">
+            <input
+              id="${inputId}"
+              type="number"
+              min="0"
+              step="1"
+              placeholder="Valor em Kz..."
+              value="${existing}"
+              style="width:100%;padding:9px 12px;background:rgba(255,255,255,0.06);border:1px solid ${hasValue ? 'rgba(34,197,94,0.4)' : 'var(--border)'};border-radius:10px;color:var(--fg);font-size:13px;font-weight:600;box-sizing:border-box;outline:none;"
+              oninput="this.style.borderColor=this.value?'rgba(34,197,94,0.5)':'var(--border)'"
+            />
+          </div>
+          ${hasValue ? '<div style="font-size:10px;color:#4ADE80;white-space:nowrap;">✓ já definido</div>' : '<div style="width:60px;"></div>'}
+        </div>`;
+    }).join('');
+
+    const agencyColor = agency.color || '#1A56DB';
+    return `
+      <div style="margin-bottom:16px;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:14px;overflow:hidden;">
+        <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:rgba(255,255,255,0.03);border-bottom:1px solid var(--border);">
+          <div style="width:32px;height:32px;border-radius:8px;background:${agencyColor};display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;color:white;flex-shrink:0;">${agency.code}</div>
+          <div style="font-size:14px;font-weight:700;color:var(--fg);">${agency.name}</div>
+        </div>
+        <div style="padding:4px 14px 4px;">
+          ${agencyRows}
+        </div>
+      </div>`;
+  }).join('');
+
+  // Guardar date e agencies no modal para uso no submit
+  modal.dataset.date = date;
+  modal.dataset.agencyIds = agencies.map(a => a.id).join(',');
+  modal.style.display = 'flex';
+}
+
+function closeBulkInitialModal() {
+  document.getElementById('modal-bulk-initial').style.display = 'none';
+}
+
+async function submitBulkInitial() {
+  const modal = document.getElementById('modal-bulk-initial');
+  const date  = modal.dataset.date;
+  const agencyIds = (modal.dataset.agencyIds || '').split(',').filter(Boolean);
+  const shifts = ['morning', 'afternoon'];
+
+  const entries = [];
+  for (const agencyId of agencyIds) {
+    for (const shift of shifts) {
+      const input = document.getElementById(`bulk-${agencyId}-${shift}`);
+      if (!input) continue;
+      const val = input.value.trim();
+      if (val === '' || val === null) continue;
+      entries.push({ agencyId, shift, initialBalance: Number(val) });
+    }
+  }
+
+  if (entries.length === 0) {
+    alert('Nenhum valor preenchido. Preencha pelo menos um campo.');
+    return;
+  }
+
+  const btn = document.getElementById('bulk-submit-btn');
+  btn.disabled = true;
+  btn.textContent = '⏳ A guardar...';
+
+  try {
+    const result = await api('POST', '/api/records/bulk-initial', { date, entries });
+    closeBulkInitialModal();
+    // Recarregar o dashboard
+    if (typeof loadManagementDashboard === 'function') {
+      await loadManagementDashboard();
+    }
+    // Feedback visual
+    const toast = document.createElement('div');
+    toast.textContent = `✅ ${result.updated} saldo(s) inicial(is) guardado(s) com sucesso`;
+    toast.style.cssText = 'position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#15803D;color:white;padding:12px 20px;border-radius:12px;font-size:13px;font-weight:700;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,0.4);';
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
+  } catch(e) {
+    alert('Erro ao guardar: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '✅ Guardar Todos os Saldos';
+  }
+}
+
+</script>
+
+    <!-- Modal: Renomear -->
+    <div id="modal-rename" class="modal-overlay hidden">
+      <div class="modal-box">
+        <div class="modal-title">✏️ Renomear</div>
+        <div class="modal-sub" id="modal-rename-sub">Novo nome</div>
+        <div style="margin:16px 0;">
+          <input id="modal-rename-input" type="text" class="pin-input-field" style="width:100%;text-align:left;font-size:16px;padding:12px 14px;border-radius:10px;background:var(--surface);border:1px solid var(--border);color:var(--foreground);" placeholder="Novo nome...">
+        </div>
+        <div style="display:flex;gap:8px;margin-top:8px;">
+          <button class="btn btn-outline flex-1" onclick="closeRenameModal()">Cancelar</button>
+          <button class="btn btn-primary flex-1" onclick="submitRename()">Guardar</button>
+        </div>
+      </div>
+    </div>
+
+  <!-- ═══ Modal: Saldo Inicial em Massa ══════════════════════════════════════ -->
+  <div id="modal-bulk-initial" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,0.75);backdrop-filter:blur(4px);overflow-y:auto;">
+    <div style="min-height:100%;display:flex;align-items:flex-start;justify-content:center;padding:20px 12px 40px;">
+      <div style="background:var(--surface);border:1px solid var(--border-bright);border-radius:20px;width:100%;max-width:480px;overflow:hidden;">
+        <!-- Cabeçalho -->
+        <div style="background:linear-gradient(135deg,rgba(34,197,94,0.15),rgba(16,185,129,0.08));border-bottom:1px solid rgba(34,197,94,0.25);padding:18px 20px;display:flex;align-items:center;gap:12px;">
+          <div style="font-size:24px;">💰</div>
+          <div>
+            <div style="font-size:16px;font-weight:800;color:#4ADE80;">Saldo Inicial em Massa</div>
+            <div id="bulk-modal-date-label" style="font-size:12px;color:var(--muted);margin-top:2px;"></div>
+          </div>
+          <button onclick="closeBulkInitialModal()" style="margin-left:auto;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:8px;padding:6px 12px;color:var(--fg);font-size:13px;cursor:pointer;">✕ Fechar</button>
+        </div>
+
+        <!-- Instrução -->
+        <div style="padding:14px 20px 0;font-size:12px;color:var(--muted);line-height:1.5;">
+          Preencha os saldos iniciais que pretende definir. Campos em branco são ignorados.
+          Os valores já existentes serão substituídos.
+        </div>
+
+        <!-- Formulário -->
+        <div id="bulk-initial-form" style="padding:14px 20px 20px;display:flex;flex-direction:column;gap:0;"></div>
+
+        <!-- Botões de acção -->
+        <div style="padding:0 20px 20px;display:flex;gap:10px;">
+          <button onclick="closeBulkInitialModal()" style="flex:1;padding:12px;background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:12px;color:var(--muted);font-size:14px;font-weight:600;cursor:pointer;">Cancelar</button>
+          <button onclick="submitBulkInitial()" id="bulk-submit-btn" style="flex:2;padding:12px;background:linear-gradient(135deg,#16A34A,#059669);border:none;border-radius:12px;color:white;font-size:14px;font-weight:800;cursor:pointer;transition:opacity 0.2s;">
+            ✅ Guardar Todos os Saldos
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Registo do Service Worker (PWA) -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+          .then(reg => {
+            console.log('[PWA] Service Worker registado:', reg.scope);
+            // Verificar actualizações a cada 30 minutos
+            setInterval(() => reg.update(), 30 * 60 * 1000);
+          })
+          .catch(err => console.warn('[PWA] Service Worker falhou:', err));
+      });
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+node_modules/
+*.db
+*.db-shm
+*.db-wal
+.env
+migrate_users.js
+migrate_local.js
+migrate.js
+DEPLOY_FLYIO.md

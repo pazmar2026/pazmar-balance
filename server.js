@@ -165,6 +165,11 @@ db.exec(`
   );
 `);
 
+// ─── Migração: adicionar coluna tpa_amount se não existir ───────────────────
+try {
+  db.exec('ALTER TABLE shift_records ADD COLUMN tpa_amount REAL DEFAULT 0');
+} catch(e) { /* coluna já existe */ }
+
 // ─── Dados Iniciais ───────────────────────────────────────────────────────────
 function seedData() {
   const agencyCount = db.prepare('SELECT COUNT(*) as c FROM agencies').get().c;
@@ -268,16 +273,18 @@ function calcTriangularDiff(record) {
   // Fórmula: (Deixado Manhã + Bancário Manhã) - Físico Tarde = Bancário Noite
   // Diferença = (Deixado Manhã + Bancário Manhã) - Físico Tarde - Bancário Noite
   // Para a manhã: fórmula original
+  // TPA: soma ao físico para o cálculo (P2 e P6), mas NÃO entra no depósito
   const managerInitial = record.initial_balance ?? 0;
   const agentInitial = record.agent_initial_balance ?? 0;
   const expected = managerInitial + agentInitial;
   const physical = record.agent_closing_balance;
   const bank = record.bank_balance;
+  const tpa = record.tpa_amount ?? 0;
   if (physical === null && bank === null) return null;
   if (record.initial_balance === null) return null;
-  // Diferença = Esperado - (Físico + Bancário)
+  // Diferença = (Físico + TPA + Bancário) - Esperado
   // Positivo = sobra; Negativo = falta
-  const actual = (physical ?? 0) + (bank ?? 0);
+  const actual = (physical ?? 0) + tpa + (bank ?? 0);
   return actual - expected;
 }
 
@@ -298,8 +305,9 @@ function formatRecord(r) {
   const physical = r.agent_closing_balance;
   const bank = r.bank_balance;
   const leftInAgency = r.left_in_agency ?? null;
-  const actualTotal = (physical !== null || bank !== null) ? ((physical ?? 0) + (bank ?? 0)) : null;
-  // Valor a depositar = Físico - Deixado na Agência
+  const tpa = r.tpa_amount ?? 0;
+  const actualTotal = (physical !== null || bank !== null) ? ((physical ?? 0) + tpa + (bank ?? 0)) : null;
+  // Valor a depositar = Físico - Deixado na Agência (TPA NÃO entra no depósito)
   const toDeposit = (physical !== null && leftInAgency !== null) ? physical - leftInAgency : (physical ?? null);
   const colorMap = { ok: 'green', warning: 'yellow', medium: 'orange', alert: 'red', pending: 'gray' };
   const status = getDiffStatus(diff);
@@ -312,6 +320,7 @@ function formatRecord(r) {
     actualTotal,
     left_in_agency: leftInAgency,
     to_deposit: toDeposit,
+    tpa_amount: tpa,
   };
 }
 
@@ -535,7 +544,7 @@ app.post('/api/records/set-agent-initial', authMiddleware, (req, res, next) => {
 // Fechar turno — agente insere saldo físico e valor deixado na agência
 app.post('/api/records/close-agent', authMiddleware, (req, res, next) => {
   try {
-  const { agencyId, date, shift, agentClosingBalance, leftInAgency, notes } = req.body;
+  const { agencyId, date, shift, agentClosingBalance, leftInAgency, notes, tpaAmount } = req.body;
   if (req.user.role === 'agent') {
     if (req.user.agencyId !== agencyId || req.user.shift !== shift) {
       return res.status(403).json({ error: 'Não pode fechar outro turno' });
@@ -543,8 +552,10 @@ app.post('/api/records/close-agent', authMiddleware, (req, res, next) => {
   }
   getOrCreateRecord(agencyId, date, shift);
   const leftVal = (leftInAgency !== undefined && leftInAgency !== null && leftInAgency !== '') ? parseFloat(leftInAgency) : null;
-  db.prepare(`UPDATE shift_records SET agent_closing_balance = ?, left_in_agency = ?, notes = ?, closed_at = ?, closed_by = ? WHERE agency_id = ? AND date = ? AND shift = ?`)
-    .run(agentClosingBalance, leftVal, notes || '', new Date().toISOString(), req.user.id, agencyId, date, shift);
+  // TPA: apenas para agências P2 e P6 (Benguela)
+  const tpaVal = (['p2', 'p6'].includes(agencyId) && tpaAmount !== undefined && tpaAmount !== null && tpaAmount !== '') ? parseFloat(tpaAmount) : 0;
+  db.prepare(`UPDATE shift_records SET agent_closing_balance = ?, left_in_agency = ?, tpa_amount = ?, notes = ?, closed_at = ?, closed_by = ? WHERE agency_id = ? AND date = ? AND shift = ?`)
+    .run(agentClosingBalance, leftVal, tpaVal, notes || '', new Date().toISOString(), req.user.id, agencyId, date, shift);
 
   // ── Propagação automática da manhã para a tarde ──
   // Saldo Inicial Tarde = Deixado na Agência (manhã) + Bancário Manhã
@@ -942,6 +953,7 @@ app.put('/api/records/edit', authMiddleware, managementOnly, (req, res, next) =>
       agent_initial_balance: 'agent_initial_balance',
       agent_closing_balance: 'agent_closing_balance',
       bank_balance: 'bank_balance',
+      tpa_amount: 'tpa_amount',
       notes: 'notes',
     };
     if (!allowedFields[field]) {

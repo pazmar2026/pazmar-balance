@@ -972,6 +972,11 @@
         <input type="number" id="modal-left-input" class="form-input" placeholder="0.00 (opcional)" inputmode="decimal" min="0" step="0.01" />
         <div class="form-hint">Valor que fica fisicamente na agência. O restante será depositado.</div>
       </div>
+      <div class="form-group" id="modal-tpa-group" style="display:none;">
+        <label class="form-label">💳 Valor TPA (Kz)</label>
+        <input type="number" id="modal-tpa-input" class="form-input" placeholder="0.00 (opcional)" inputmode="decimal" min="0" step="0.01" />
+        <div class="form-hint">Valor recebido via TPA. Soma ao físico para verificação, mas não entra no depósito bancário.</div>
+      </div>
       <div class="form-group" id="modal-notes-group">
         <label class="form-label">Notas (opcional)</label>
         <input type="text" id="modal-notes-input" class="form-input" placeholder="Observações..." />
@@ -1999,10 +2004,13 @@ function renderShiftSection(agencyId, shift, record, shiftLabel, agentName) {
   const agentInit = record?.agent_initial_balance;
   const agentClose = record?.agent_closing_balance;
   const bank = record?.bank_balance;
+  const tpa = record?.tpa_amount ?? 0;
   const diff = record?.difference;
   const status = record?.status || 'pending';
   // Indica se o inicial da tarde foi propagado automaticamente do bancário da manhã
   const isAutoPropagated = shift === 'afternoon' && record?.opened_by === 'auto_from_morning';
+  // TPA apenas para P2 e P6
+  const hasTpa = ['p2', 'p6'].includes(agencyId) && tpa > 0;
 
   const totalInitial = (managerInit !== null && managerInit !== undefined && agentInit !== null && agentInit !== undefined)
     ? (managerInit + agentInit) : null;
@@ -2030,6 +2038,10 @@ function renderShiftSection(agencyId, shift, record, shiftLabel, agentName) {
         <div class="shift-value-label">Físico (Agente)</div>
         <div class="shift-value-num" style="color:var(--success)">${fmtCurrency(agentClose)}</div>
       </div>
+      ${hasTpa ? `<div class="shift-value-item">
+        <div class="shift-value-label">💳 TPA</div>
+        <div class="shift-value-num" style="color:#0891B2">${fmtCurrency(tpa)}</div>
+      </div>` : ''}
       <div class="shift-value-item">
         <div class="shift-value-label">Bancário</div>
         <div class="shift-value-num" style="color:#0F766E">${fmtCurrency(bank)}</div>
@@ -2038,14 +2050,14 @@ function renderShiftSection(agencyId, shift, record, shiftLabel, agentName) {
     ${diff !== null && diff !== undefined ? `
     <div class="diff-result ${diffClassFull(status, diff)}">
       <div>
-        <div class="diff-label" style="color:${diff > 0 ? '#FFD700' : statusColors(status)}">${diff > 0 ? '✨ Excedente' : 'Diferença'}</div>
-        <div style="font-size:11px;color:${diff > 0 ? 'rgba(255,215,0,0.8)' : statusColors(status)};opacity:0.9;">
-          Esperado: ${fmtCurrency(totalInitial)} | Real: ${fmtCurrency((agentClose||0)+(bank||0))}
+        <div class="diff-label" style="color:${diff >= 0 ? '#15803D' : statusColors(status)}">${diff >= 0 ? '✅ OK' : '🔴 Falta'}</div>
+        <div style="font-size:11px;color:${diff >= 0 ? 'rgba(21,128,61,0.8)' : statusColors(status)};opacity:0.9;">
+          Esperado: ${fmtCurrency(totalInitial)} | Real: ${fmtCurrency((agentClose||0)+tpa+(bank||0))}
         </div>
       </div>
-      ${diff > 0
-        ? `<div class="diff-value-surplus">+${fmtCurrency(diff)} a mais</div>`
-        : `<div class="diff-value" style="color:${statusColors(status)}">${diff === 0 ? '' : ''}${fmtCurrency(diff)}</div>`
+      ${diff >= 0
+        ? `<div class="diff-value" style="color:#15803D;font-weight:800;">OK</div>`
+        : `<div class="diff-value" style="color:${statusColors(status)}">${fmtCurrency(Math.abs(diff))}</div>`
       }
     </div>` : ''}
     <div class="shift-actions mt-2">
@@ -2180,24 +2192,18 @@ function renderAgentView(record, shift) {
 
   let resultHtml = '';
   if (diff !== null && diff !== undefined) {
-    if (diff > 0) {
-      // Excedente cintilante
-      resultHtml = `<div class="agent-result-box diff-surplus" style="padding:14px;border-radius:12px;">
-        <div class="diff-label" style="color:#FFD700;font-size:13px;">✨ Excedente — Há mais dinheiro do que o esperado!</div>
-        <div class="diff-value-surplus" style="font-size:20px;margin:6px 0;">+${fmtCurrency(diff)} a mais</div>
-        <div style="font-size:11px;color:rgba(255,215,0,0.7);">O valor real supera o esperado</div>
+    if (diff >= 0) {
+      // Físico >= Esperado: mostrar apenas OK (sem valor de excedente)
+      resultHtml = `<div class="agent-result-box" style="background:var(--success-dim);padding:14px;border-radius:12px;">
+        <div class="agent-result-label" style="color:var(--success)">✅ OK — Saldo confere!</div>
       </div>`;
     } else {
-      const bgMap = { ok:'var(--success-dim)', warning:'var(--warning-dim)', medium:'var(--medium-dim)', alert:'var(--danger-dim)', pending:'rgba(255,255,255,0.03)' };
-      const colorMap = { ok:'var(--success)', warning:'var(--warning)', medium:'var(--medium)', alert:'var(--danger)', pending:'var(--muted)' };
-      const labelMap = { ok:'✅ Tudo OK — Saldo confere!', warning:'⚠️ Diferença Pequena', medium:'🟠 Diferença Média', alert:'🔴 Diferença Grande — Verificar!', pending:'⏳ Aguarda confirmação' };
-      const bg = bgMap[status] || bgMap.pending;
-      const color = colorMap[status] || colorMap.pending;
-      const label = labelMap[status] || labelMap.pending;
-      resultHtml = `<div class="agent-result-box" style="background:${bg};">
-        <div class="agent-result-label" style="color:${color}">${label}</div>
-        <div class="agent-result-value" style="color:${color}">${diff === 0 ? '0' : fmtCurrency(diff)}</div>
-        <div class="agent-result-desc" style="color:${color}">Diferença entre o esperado e o verificado</div>
+      // Físico < Esperado: mostrar Falta X Kz
+      const falta = Math.abs(diff);
+      resultHtml = `<div class="agent-result-box" style="background:var(--danger-dim);padding:14px;border-radius:12px;">
+        <div class="agent-result-label" style="color:var(--danger)">🔴 Falta</div>
+        <div class="agent-result-value" style="color:var(--danger);font-size:22px;font-weight:800;margin:6px 0;">${fmtCurrency(falta)}</div>
+        <div class="agent-result-desc" style="color:var(--danger);font-size:11px;">Valor em falta no fecho do turno</div>
       </div>`;
     }
   } else if (!managerSet) {
@@ -2242,7 +2248,7 @@ function renderAgentView(record, shift) {
         <button class="btn btn-purple btn-lg" onclick="openValueModal('set_agent_initial','${state.user.agencyId}','${shift}',${JSON.stringify(agentInit)})">
           💼 ${agentInit !== null && agentInit !== undefined ? 'Atualizar Inicial' : 'Inserir Saldo Inicial'}
         </button>
-        <button class="btn btn-success btn-lg" onclick="openValueModal('close_agent','${state.user.agencyId}','${shift}',${JSON.stringify(agentClose)})">
+        <button class="btn btn-success btn-lg" onclick="openValueModal('close_agent','${state.user.agencyId}','${shift}',${JSON.stringify(agentClose)},${JSON.stringify({tpa_amount: record?.tpa_amount || 0})})">
           💵 ${agentClose !== null && agentClose !== undefined ? 'Atualizar Fecho' : 'Inserir Saldo de Fecho'}
         </button>
         <div style="display:flex;gap:8px;">
@@ -2268,7 +2274,7 @@ const modeConfig = {
   confirm_bank: { title: '🏧 Saldo Bancário', sub: 'Valor registado na conta bancária', hint: 'Consulte a aplicação do banco e insira o saldo atual' },
 };
 
-function openValueModal(mode, agencyId, shift, currentValue) {
+function openValueModal(mode, agencyId, shift, currentValue, extraData) {
   modalCtx = { mode, agencyId, shift };
   const cfg = modeConfig[mode] || { title: 'Inserir Valor', sub: '', hint: '' };
   document.getElementById('modal-value-title').textContent = cfg.title;
@@ -2279,6 +2285,10 @@ function openValueModal(mode, agencyId, shift, currentValue) {
   document.getElementById('modal-notes-group').style.display = (mode === 'close_agent') ? 'block' : 'none';
   document.getElementById('modal-left-group').style.display = (mode === 'close_agent') ? 'block' : 'none';
   document.getElementById('modal-left-input').value = '';
+  // Campo TPA apenas para P2 e P6 no fecho do agente
+  const showTpa = (mode === 'close_agent') && (['p2', 'p6'].includes(agencyId));
+  document.getElementById('modal-tpa-group').style.display = showTpa ? 'block' : 'none';
+  document.getElementById('modal-tpa-input').value = (showTpa && extraData?.tpa_amount) ? extraData.tpa_amount : '';
   document.getElementById('modal-value').classList.remove('hidden');
   setTimeout(() => document.getElementById('modal-value-input').focus(), 100);
 }
@@ -2299,7 +2309,7 @@ async function submitValueModal() {
     const endpointMap = {
       set_manager_initial: ['/api/records/set-initial', { agencyId, date, shift, initialBalance: val }],
       set_agent_initial: ['/api/records/set-agent-initial', { agencyId, date, shift, agentInitialBalance: val }],
-      close_agent: ['/api/records/close-agent', { agencyId, date, shift, agentClosingBalance: val, leftInAgency: leftVal, notes }],
+      close_agent: ['/api/records/close-agent', { agencyId, date, shift, agentClosingBalance: val, leftInAgency: leftVal, notes, tpaAmount: (['p2','p6'].includes(agencyId) ? (parseFloat(document.getElementById('modal-tpa-input').value) || 0) : 0) }],
       confirm_bank: ['/api/records/confirm-bank', { agencyId, date, shift, bankBalance: val }],
     };
     const [endpoint, body] = endpointMap[mode];

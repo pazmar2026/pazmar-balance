@@ -804,6 +804,12 @@
       <button class="summary-btn" onclick="openSummaryModal()">
         📋 Gerar Resumo do Dia
       </button>
+      <button class="summary-btn" onclick="downloadBackup('json')" style="background:linear-gradient(135deg,rgba(14,165,233,0.15),rgba(6,182,212,0.08));border-color:rgba(14,165,233,0.4);color:#38BDF8;">
+        💾 Backup Completo (JSON)
+      </button>
+      <button class="summary-btn" onclick="downloadBackup('csv')" style="background:linear-gradient(135deg,rgba(168,85,247,0.15),rgba(139,92,246,0.08));border-color:rgba(168,85,247,0.4);color:#C084FC;">
+        📊 Exportar para Excel (CSV)
+      </button>
     </div>
 
     <!-- Tab: Gato -->
@@ -1470,6 +1476,34 @@ function logout() {
   selectedUserId = null;
   showUserSelect();
   initLogin();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// BACKUP / EXPORTAÇÃO
+// ═══════════════════════════════════════════════════════════════
+async function downloadBackup(format) {
+  try {
+    showToast('⏳ A preparar backup...');
+    const endpoint = format === 'csv' ? '/api/backup/export-csv' : '/api/backup/export';
+    const response = await fetch(endpoint, {
+      headers: { 'Authorization': 'Bearer ' + state.token }
+    });
+    if (!response.ok) throw new Error('Erro ao exportar dados');
+    const blob = await response.blob();
+    const today = new Date().toISOString().slice(0,10);
+    const filename = format === 'csv' ? `pazmar-dados-${today}.csv` : `pazmar-backup-${today}.json`;
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('✅ ' + (format === 'csv' ? 'CSV exportado!' : 'Backup descarregado!'));
+  } catch(e) {
+    showToast('❌ Erro: ' + (e.message || 'Falha no backup'));
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════

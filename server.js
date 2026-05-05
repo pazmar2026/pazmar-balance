@@ -1308,6 +1308,101 @@ app.delete('/api/accounts/validate', authMiddleware, managementOrAccountant, (re
   } catch(e) { next(e); }
 });
 
+// ─── Backup / Exportação de Dados ────────────────────────────────────────────
+// GET /api/backup/export — exportar todos os dados em JSON (apenas Gerência)
+app.get('/api/backup/export', authMiddleware, managementOnly, (req, res, next) => {
+  try {
+    const agencies = db.prepare('SELECT * FROM agencies').all();
+    const users = db.prepare('SELECT id, name, role, agency_id, zone, shift, is_active, created_at FROM users').all();
+    const records = db.prepare('SELECT * FROM shift_records ORDER BY date DESC, agency_id, shift').all();
+    const gatos = db.prepare('SELECT * FROM gatos ORDER BY date DESC').all();
+    const accountValidations = db.prepare('SELECT * FROM account_validations ORDER BY date DESC').all();
+    const depositConfirmations = db.prepare('SELECT * FROM deposit_confirmations ORDER BY deposit_date DESC').all();
+    const dailyValidations = db.prepare('SELECT * FROM daily_validations ORDER BY date DESC').all();
+    const backup = {
+      version: '1.0',
+      exported_at: new Date().toISOString(),
+      agencies,
+      users,
+      shift_records: records,
+      gatos,
+      account_validations: accountValidations,
+      deposit_confirmations: depositConfirmations,
+      daily_validations: dailyValidations,
+    };
+    const filename = `pazmar-backup-${new Date().toISOString().slice(0,10)}.json`;
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.setHeader('Content-Type', 'application/json');
+    res.json(backup);
+  } catch(e) { next(e); }
+});
+
+// GET /api/backup/export-csv — exportar registos em CSV para Excel (apenas Gerência)
+app.get('/api/backup/export-csv', authMiddleware, managementOnly, (req, res, next) => {
+  try {
+    const records = db.prepare(`
+      SELECT sr.*, a.name as agency_name
+      FROM shift_records sr
+      LEFT JOIN agencies a ON sr.agency_id = a.id
+      ORDER BY sr.date DESC, sr.agency_id, sr.shift
+    `).all();
+    const gatos = db.prepare(`
+      SELECT g.*, a.name as agency_name, u.name as user_name
+      FROM gatos g
+      LEFT JOIN agencies a ON g.agency_id = a.id
+      LEFT JOIN users u ON g.user_id = u.id
+      ORDER BY g.date DESC
+    `).all();
+    const deposits = db.prepare(`
+      SELECT dc.*, a.name as agency_name, u.name as confirmed_by_name
+      FROM deposit_confirmations dc
+      LEFT JOIN agencies a ON dc.agency_id = a.id
+      LEFT JOIN users u ON dc.confirmed_by = u.id
+      ORDER BY dc.deposit_date DESC
+    `).all();
+    const csvHeaders = ['Data','Agência','Turno','Inicial Gerência','Inicial Agente','Físico Fecho','TPA','Bancário','Deixado Agência','A Depositar','Diferença','Estado','Notas'];
+    const csvRows = records.map(r => [
+      r.date,
+      r.agency_name || r.agency_id,
+      r.shift === 'morning' ? 'Manhã' : 'Tarde',
+      r.initial_balance ?? '',
+      r.agent_initial_balance ?? '',
+      r.agent_closing_balance ?? '',
+      r.tpa_amount ?? 0,
+      r.bank_balance ?? '',
+      r.left_in_agency ?? '',
+      r.to_deposit ?? '',
+      r.difference ?? '',
+      r.status || '',
+      (r.notes || '').replace(/,/g, ';'),
+    ]);
+    const gatoHeaders = ['Data','Agência','Turno','Esperado','Real','Diferença','Nota','Auto','Criado em'];
+    const gatoRows = gatos.map(g => [
+      g.date, g.agency_name || g.agency_id,
+      g.shift === 'morning' ? 'Manhã' : 'Tarde',
+      g.expected_amount, g.actual_amount, g.difference,
+      (g.note || '').replace(/,/g, ';'),
+      g.auto_registered ? 'Sim' : 'Não',
+      g.created_at || '',
+    ]);
+    const depHeaders = ['Data Origem','Turno','Data Depósito','Agência','Esperado','Confirmado','Diferença','Confirmado por','Notas'];
+    const depRows = deposits.map(d => [
+      d.source_date,
+      d.source_shift === 'morning' ? 'Manhã' : (d.source_shift === 'afternoon' ? 'Tarde' : 'Todos'),
+      d.deposit_date, d.agency_name || d.agency_id,
+      d.expected_amount, d.confirmed_amount ?? '',
+      d.difference ?? '', d.confirmed_by_name || '',
+      (d.notes || '').replace(/,/g, ';'),
+    ]);
+    const toCSV = (headers, rows) => [headers, ...rows].map(r => r.join(',')).join('\n');
+    const fullCSV = `=== REGISTOS DE TURNOS ===\n${toCSV(csvHeaders, csvRows)}\n\n=== GATOS ===\n${toCSV(gatoHeaders, gatoRows)}\n\n=== DEPÓSITOS ===\n${toCSV(depHeaders, depRows)}`;
+    const filename = `pazmar-dados-${new Date().toISOString().slice(0,10)}.csv`;
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.send('\uFEFF' + fullCSV);
+  } catch(e) { next(e); }
+});
+
 // ─── Error Handler Global (deve vir antes do wildcard) ──────────────────────
 // eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {

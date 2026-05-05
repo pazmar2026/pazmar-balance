@@ -32,7 +32,17 @@ const JWT_SECRET = process.env.JWT_SECRET || 'pazmar_secret_2026_key';
 // ─── Middleware ───────────────────────────────────────────────────────────────
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'public'), {
+  etag: false,
+  lastModified: false,
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith('index.html')) {
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+    }
+  }
+}));
 
 // ─── Base de Dados ────────────────────────────────────────────────────────────
 // Suporta volume persistente no Fly.io via DB_PATH, ou usa directório local

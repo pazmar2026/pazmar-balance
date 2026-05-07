@@ -32,16 +32,19 @@ const JWT_SECRET = process.env.JWT_SECRET || 'pazmar_secret_2026_key';
 // ─── Middleware ───────────────────────────────────────────────────────────────
 app.use(cors());
 app.use(express.json());
+// Servir index.html na raiz com headers de no-cache para evitar cache do CDN
+app.get('/', (req, res) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  res.setHeader('Surrogate-Control', 'no-store');
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+// Servir outros ficheiros estáticos (manifest.json, ícones, etc.)
 app.use(express.static(path.join(__dirname, 'public'), {
   etag: false,
   lastModified: false,
-  setHeaders: (res, filePath) => {
-    if (filePath.endsWith('index.html')) {
-      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-      res.setHeader('Pragma', 'no-cache');
-      res.setHeader('Expires', '0');
-    }
-  }
+  index: false
 }));
 
 // ─── Base de Dados ────────────────────────────────────────────────────────────

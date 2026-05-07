@@ -179,6 +179,13 @@ db.exec(`
 try {
   db.exec('ALTER TABLE shift_records ADD COLUMN tpa_amount REAL DEFAULT 0');
 } catch(e) { /* coluna já existe */ }
+// ─── Migração: adicionar colunas edited_at e edited_by se não existirem ───────
+try {
+  db.exec('ALTER TABLE shift_records ADD COLUMN edited_at TEXT');
+} catch(e) { /* coluna já existe */ }
+try {
+  db.exec('ALTER TABLE shift_records ADD COLUMN edited_by TEXT');
+} catch(e) { /* coluna já existe */ }
 
 // ─── Dados Iniciais ───────────────────────────────────────────────────────────
 function seedData() {

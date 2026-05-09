@@ -344,7 +344,24 @@ function formatRecord(r) {
   };
 }
 
-// ─── Rotas: Auth ──────────────────────────────────────────────────────────────
+// ─── Rota de diagnóstico ─────────────────────────────────────────────────────
+app.get('/api/version', (req, res) => {
+  const fs = require('fs');
+  const indexPath = require('path').join(__dirname, 'public', 'index.html');
+  const stats = fs.statSync(indexPath);
+  res.json({
+    version: '2026-05-09',
+    server: 'pazmar-balance-v3',
+    indexSize: stats.size,
+    indexMtime: stats.mtime.toISOString(),
+    hasDownloadBackup: fs.readFileSync(indexPath, 'utf8').includes('downloadBackup'),
+    hasTPA: fs.readFileSync(indexPath, 'utf8').includes('tpa_amount'),
+    nodeVersion: process.version,
+    uptime: process.uptime()
+  });
+});
+
+// ─── Rotas: Auth ────────────────────────────────────────────────────────────
 app.get('/api/users', (req, res) => {
   const users = db.prepare(
     'SELECT id, name, role, agency_id, shift, zone FROM users WHERE is_active = 1 ORDER BY role DESC, name'

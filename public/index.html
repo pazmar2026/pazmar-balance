@@ -2282,7 +2282,7 @@ function renderAgentView(record, shift) {
         <button class="btn btn-purple btn-lg" onclick="openValueModal('set_agent_initial','${state.user.agencyId}','${shift}',${JSON.stringify(agentInit)})">
           💼 ${agentInit !== null && agentInit !== undefined ? 'Atualizar Inicial' : 'Inserir Saldo Inicial'}
         </button>
-        <button class="btn btn-success btn-lg" onclick="openValueModal('close_agent','${state.user.agencyId}','${shift}',${JSON.stringify(agentClose)},${JSON.stringify({tpa_amount: record?.tpa_amount || 0})})">
+        <button class="btn btn-success btn-lg" onclick="openValueModal('close_agent','${state.user.agencyId}','${shift}',${JSON.stringify(agentClose)},${record?.tpa_amount || 0})">
           💵 ${agentClose !== null && agentClose !== undefined ? 'Atualizar Fecho' : 'Inserir Saldo de Fecho'}
         </button>
         <div style="display:flex;gap:8px;">
@@ -2308,7 +2308,7 @@ const modeConfig = {
   confirm_bank: { title: '🏧 Saldo Bancário', sub: 'Valor registado na conta bancária', hint: 'Consulte a aplicação do banco e insira o saldo atual' },
 };
 
-function openValueModal(mode, agencyId, shift, currentValue, extraData) {
+function openValueModal(mode, agencyId, shift, currentValue, tpaAmount) {
   modalCtx = { mode, agencyId, shift };
   const cfg = modeConfig[mode] || { title: 'Inserir Valor', sub: '', hint: '' };
   document.getElementById('modal-value-title').textContent = cfg.title;
@@ -2322,7 +2322,7 @@ function openValueModal(mode, agencyId, shift, currentValue, extraData) {
   // Campo TPA apenas para P2 e P6 no fecho do agente
   const showTpa = (mode === 'close_agent') && (['p2', 'p6'].includes(agencyId));
   document.getElementById('modal-tpa-group').style.display = showTpa ? 'block' : 'none';
-  document.getElementById('modal-tpa-input').value = (showTpa && extraData?.tpa_amount) ? extraData.tpa_amount : '';
+  document.getElementById('modal-tpa-input').value = (showTpa && tpaAmount) ? tpaAmount : '';
   document.getElementById('modal-value').classList.remove('hidden');
   setTimeout(() => document.getElementById('modal-value-input').focus(), 100);
 }

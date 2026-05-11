@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pazmar-v1';
+const CACHE_NAME = 'pazmar-v3';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -18,11 +18,14 @@ self.addEventListener('install', (event) => {
   self.skipWaiting();
 });
 
-// Activar: limpar caches antigas
+// Activar: limpar TODAS as caches antigas
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
-      Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
+      Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => {
+        console.log('[SW] Limpando cache antiga:', k);
+        return caches.delete(k);
+      }))
     )
   );
   self.clients.claim();
@@ -43,7 +46,23 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Assets estáticos: cache-first com fallback para rede
+  // index.html: sempre rede primeiro para garantir versão mais recente
+  if (url.pathname === '/' || url.pathname === '/index.html') {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          if (response && response.status === 200) {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+          }
+          return response;
+        })
+        .catch(() => caches.match(event.request))
+    );
+    return;
+  }
+
+  // Outros assets estáticos: cache-first com fallback para rede
   event.respondWith(
     caches.match(event.request).then((cached) => {
       if (cached) return cached;
